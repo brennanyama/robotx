@@ -1,15 +1,9 @@
 /*
- * rosserial Servo Control Example
- *
- * This sketch demonstrates the control of hobby R/C servos
- * using ROS and the arduiono
+ * Controls four servos (servo motors).
  * 
- * For the full tutorial write up, visit
+ * Parts of this code used from ros tutorial found here, 
  * www.ros.org/wiki/rosserial_arduino_demos
  *
- * For more information on the Arduino Servo Library
- * Checkout :
- * http://www.arduino.cc/en/Reference/Servo
  */
 
 #if (ARDUINO >= 100)
