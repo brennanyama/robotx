@@ -1,0 +1,7 @@
+Servo control terminal commands
+
+roscore 
+(new terminal)
+rosrun rosserial_python serial_node.py _port:=/dev/ttyAMC0	// might need to chance the AMC to USB
+(new terminal)
+rostopic pub servo8 std_msgs/UInt16  <angle>			// angle goes from 0 to 180, change the servo number to change servo
