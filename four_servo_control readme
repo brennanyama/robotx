@@ -1,6 +1,6 @@
 Servo control terminal commands readme.  This assumes ROS Indigo is installed your 14.04 Ubuntu machine.
 
-1. Install arduino IDE (http://wiki.ros.org/rosserial_arduino/Tutorials/Arduino%20IDE%20Setup).  Upload four_servo_control.ino firmware to the arduino (if not already uploaded).
+1. Install arduino IDE (http://wiki.ros.org/rosserial_arduino/Tutorials/Arduino%20IDE%20Setup).  Plug in arduino and upload four_servo_control.ino firmware to the arduino (if not already uploaded).
 
 2. Enter terminal commands: 
 
