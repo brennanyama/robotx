@@ -1,7 +1,13 @@
-Servo control terminal commands
+Servo control terminal commands readme.  This assumes ROS Indigo is installed your 14.04 Ubuntu machine.
 
-roscore 
+1. Install arduino IDE.  Follow these instructions: http://wiki.ros.org/rosserial_arduino/Tutorials/Arduino%20IDE%20Setup
+
+2. Upload four_servo_control readme to arduino.  
+
+3. Enter terminal commands: 
+
+$ roscore 
 (new terminal)
-rosrun rosserial_python serial_node.py _port:=/dev/ttyAMC0	// might need to chance the AMC to USB
+$ rosrun rosserial_python serial_node.py _port:=/dev/ttyAMC0	// might need to chance the AMC to USB
 (new terminal)
-rostopic pub servo8 std_msgs/UInt16  <angle>			// angle goes from 0 to 180, change the servo number to change servo
+$ rostopic pub servo8 std_msgs/UInt16  <angle>			// angle goes from 0 to 180, change the servo number to change servo
