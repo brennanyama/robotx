@@ -1,0 +1,3 @@
+Need to have roscore running in a second terminal, pcd_pub running in a second, and finally pcd_sub running in a third terminal.
+
+To input a new point cloud file replace room_scan1.pcd with the name of your file and write the full directory, make sure to use // when denoting a folder.
