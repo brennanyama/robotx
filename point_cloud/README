@@ -1,3 +1,16 @@
+Download pcl_ros by typing git clone https://github.com/ros-perception/perception_pcl.git into the terminal.
+
+Create a catkin package for each cpp file with the following dependencies: roscpp rospy pcl_ros and std_msgs.
+
+catkin_create_pkg pcd_read roscpp rospy psl_ros std_msgs
+catkin_create_pkg pcd_sub roscpp rospy psl_ros std_msgs
+
+Edit the package.xml and CMakeLists.txt files and replace them with the files in these folders and copy the cpp files here aswell.
+
+Go back to the catkin_ws and type catkin_make this will create the executable in the build folder under your codes name, either pcd_read or pcd_sub, the executables will be in green text.
+
 Need to have roscore running in a second terminal, pcd_pub running in a second, and finally pcd_sub running in a third terminal.
+
+To run these executables go to their locations and type ./pcd_pub or ./pcd_sub.
 
 To input a new point cloud file replace room_scan1.pcd with the name of your file and write the full directory, make sure to use // when denoting a folder.
