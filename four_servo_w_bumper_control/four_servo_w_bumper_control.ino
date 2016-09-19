@@ -121,10 +121,10 @@ void setup(){
   nh.advertise(bump32_sub);
   nh.advertise(bump34_sub);
   nh.advertise(bump36_sub);
-  nh.subscribe(servoQ1_sub);    // subscribe to servo8 topic
-  nh.subscribe(servoQ2_sub);    // subscribe to servo8 topic
-  nh.subscribe(servoQ3_sub);    // subscribe to servo8 topic
-  nh.subscribe(servoQ4_sub);    // subscribe to servo8 topic
+  nh.subscribe(servoQ1_sub);
+  nh.subscribe(servoQ2_sub);
+  nh.subscribe(servoQ3_sub);
+  nh.subscribe(servoQ4_sub);
 
   // Set bump sensor pin as input
   pinMode(bump22_pin,INPUT);
