@@ -1,7 +1,6 @@
 function BMBF_preliminary
 
-    % Get location information (current position (x,y), current heading
-    % (twist(=))
+    % Get location information (current position (x,y), and current heading (psi)
     
     % Look at camera to determine where the targets are
     
