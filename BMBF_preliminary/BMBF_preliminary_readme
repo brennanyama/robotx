@@ -1,1 +1,6 @@
-This is the BMBF readme file.
+This is the BMBF_preliminary readme file.
+
+List of ROS Nodes:
+rosout                      (required ros node)
+rosserial_serial            (arduino node)
+matlab_global_node_nnnn     (global matlab node)
