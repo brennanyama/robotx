@@ -1,0 +1,35 @@
+remote_control_with_interrupt_readme
+
+Requires:
+Arduino Mega
+RX and TX from Aero
+LED(if testing interrupt function)
+
+**Needs testing**
+
+This code should be able to handle the basic remote control functions. 
+
+Currently able to use the left joystick for forward, reverse, strafe left, and strafe right. The right joystick is used for rotation. It is designed to be used with the modified holonomic drive we are planning to use.
+
+On the Mega, the pin set up is as follows:
+
+	Pin 3,4,5 should go to the RX
+	Pin 18 should go to power on the RX for the interrupt
+	Pin 11(optional) is just for testing the interrupt
+	Pin 7,8,9,10 go to the motor controllers
+
+The interrupt should stay active until the RX turns off, which happens when the TX is turned off.
+
+Things to test:
+
+1. Does the interrupt function work?
+	-upload code to Mega
+	-plug in LED to pin 11 and ground
+	-the LED should blink on and off until the TX is turned on
+
+2. Before connected to motors, are we getting the correct map out from each individual controller movement?
+	-forward,reverse, left and right strafes, left and right 		forward diagonals, and rotation left and right
+	-can do this by setting up 4 println commands in the end of 		the interrupt function and observing the serial monitor
+
+3. If both of those work, try on either the VEX motors or actual trolling motors(preferred but need approval from surface)
+	-should be plug and play at this point but its never that easy
