@@ -86,7 +86,6 @@ void setup(){
   nh.advertise(re_con_inv_rotate);
   pinMode(4, INPUT); //reading in linear
   pinMode(3, INPUT); //reading in rotate
-  
   nh.subscribe(servoQ1_sub);
   nh.subscribe(servoQ2_sub);
   nh.subscribe(servoQ3_sub);
@@ -105,17 +104,12 @@ void loop(){
   linear = map(ch1, 1130, 1869, 0, 180);
   rotate = map(ch2, 1130, 1960, 0, 180);  // for propeller motor controller 500 < p < 2500
   inv_rotate = map(rotate, 0, 180, 180, 0);
-
   int x= digitalRead(30);
-  if(x ==1){
+  if(linear >=0 && linear <=180){
     take_over_msg.data = HIGH;
     //remote control data
     re_con_msg_lin.data = linear;
-//    re_con_msg_rot.data = rotate;
-//    re_con_msg_inv_rot.data = inv_rotate;
     re_con_linear.publish(&re_con_msg_lin);
-//    re_con_rotate.publish(&re_con_msg_rot);
-//    re_con_inv_rotate.publish(&re_con_msg_inv_rot);
     
     if(linear >= 70 && linear <= 90 ){
       //define neutral
