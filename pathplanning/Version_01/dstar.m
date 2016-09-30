@@ -10,19 +10,20 @@ rosinit('localhost');       % for testing
 %msg.Info.Resolution = 0.1;
 %msg.Data = 100*rand(100,1);
 
-OGridSub = rossubscriber('/OccupancyGrid', 'nav_msgs/OccupancyGrid'); % Need to establish which topic for OGrid msgs
+OGridSub = rossubscriber('/OccupancyGrid', 'nav_msgs/OccupancyGrid'); % TODO establish which topic for OGrid msgs
+GPSSub = rossubscriber('GPSLocation', 'sensor_msgs/NavSatFix');       % TODO establish topic
 OGridPub = rospublisher('/OptimalPath', 'nav_msgs/Path');
 optimalPath = rosmessage('nav_msgs/Path');  % no instance of sent message yet
 
 % OGridData = OGridSub.LatestMessage;   -- Alternative
-OGridData = receive(OGridSub, 10);      % receives data from sub, 10 sec timeout, disable for testing
-
+OGridData = receive(OGridSub, 3);       % receives data from sub, 3 sec timeout, disable for testing
+GPAData = receive(GPSSub, 3);           % Receive Raw GPS data, lat and long
 
 %% Establish OGrid, OMatrix, goal for Dstar
 
 curOGrid = OGridData;       % This should be a BinaryOccupancyGrid
 map = convG2M(curOGrid);    % converts BOG to a matrix for algorithm
-pos = [50, 50];             % get position from ROS
+pos = [50, 50];             % TODO: get position from ROS
 goal = [1, 1];              % get goal from ROS or use arbitrary goal
 
 %map = randn(100, 100);     % enable for testing  
