@@ -1,30 +1,23 @@
 <launch>
-   	<node
-	  pkg="nmea_navsat_driver"
-	  type="nmea_serial_driver"
-	  name="gps"
-	  args=" -b 38400 -p /dev/ttyACM0"
-	/>
+        <node
+          pkg="nmea_navsat_driver"
+          type="nmea_serial_driver"
+          name="gps"
+        >
+        <param name="port" value="/dev/ttyACM0"/>
+        <param name="baud" value="4800"/>
 
-	<node
-	  pkg="urg_node"
-	  type="urg_node"
-	  name="lidar"
-	/>
+        </node>
 
-	<node
-	  pkg="razor_imu_9dof"
-	  type="razor_pub.launch"
-	  name="imu"
-	/>
+        <node
+          pkg="urg_node"
+          type="urg_node"
+          name="lidar">
+        <param name="ip_address" value="192.168.0.10" />
 
-	<node
-	  pkg="rosserial_ppython"
-	  type="serial_node.py"
-	  name="serial"
-	  args=" -p /dev/ttyACM1"
-	/>
+        </node>
 
-</launch> 
-
+        <include
+          file="$(find razor_imu_9dof)/launch/razor-pub.launch"
+        />
 
