@@ -26,7 +26,7 @@ const int sQ4_pin = 11;
 int ch1, linear, inv_linear; // linear drive
 int ch2, strafe; //turning left joystick
 int ch3, rotate, inv_rotate; //rotation
-
+int map_servoQ1, map_servoQ2, map_servoQ3, map_servoQ4;
 // Instantiate node handle globally (tell ROS we're creating publishers and subscribers))
 ros::NodeHandle  nh;
 
@@ -45,16 +45,20 @@ std_msgs::UInt16 re_con_msg_inv_rot;
 
 // Instantiate ROS subscriber message and callback function
 void servoQ1_msg(const std_msgs::UInt16& cmd_msg){
-  servoQ1.write(cmd_msg.data);        // set servo angle, should be from 0-180  
+  map_servoQ1 = map(cmd_msg.data, -100, 100, 0, 255);
+  servoQ1.write(map_servoQ1);        // set servo angle, should be from 0-180  
 }
 void servoQ2_msg(const std_msgs::UInt16& cmd_msg){
-  servoQ2.write(cmd_msg.data);        // set servo angle, should be from 0-180  
+  map_servoQ2 = map(cmd_msg.data, -100, 100, 0, 255);
+  servoQ2.write(map_servoQ2);        // set servo angle, should be from 0-180  
 }
 void servoQ3_msg(const std_msgs::UInt16& cmd_msg){
-  servoQ3.write(cmd_msg.data);        // set servo angle, should be from 0-180  
+  map_servoQ3 = map(cmd_msg.data, -100, 100, 0, 255);
+  servoQ3.write(map_servoQ3);        // set servo angle, should be from 0-180  
 }
 void servoQ4_msg(const std_msgs::UInt16& cmd_msg){
-  servoQ4.write(cmd_msg.data);        // set servo angle, should be from 0-180  
+  map_servoQ4 = map(cmd_msg.data, -100, 100, 0, 255);
+  servoQ4.write(map_servoQ4);        // set servo angle, should be from 0-180  
 }
 
 
