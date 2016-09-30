@@ -1,4 +1,7 @@
 % RobotX Maritime Path Planning
+% Requires: Robotics Matlab Toolbox by Peter Corke
+% found here: http://www.petercorke.com/RTB/dl-zip.php?file=current/robot-9.10.zip
+
 
 % Initialization
 pub = 'path';                                   % ROS Topic to publish to
@@ -10,7 +13,6 @@ Ogrid = rossubscriber('nav_msgs/OccupancyGrid');
 map = Ogrid.LatestMessage;
 
 % Get Coordinates of Goal from ROS
-
 
 % Get State from ROS
 
