@@ -1,4 +1,5 @@
 update 09/29/16
+mapped inputs from ROS to 8 bit PWM signal
 Takes in commands from remote control and ROS inputs. 
 Outputs are mapped to servo motors on VEX controllers. 
 Publishes a boolean to ROS for eventual MATLAB interrupt
