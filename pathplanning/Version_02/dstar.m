@@ -3,30 +3,35 @@
 % found here: http://www.petercorke.com/RTB/dl-zip.php?file=current/robot-9.10.zip
 
 
-% Initialization
-pub = 'path';                                   % ROS Topic to publish to
-path_pub = rospublisher('Optimal_Path', rostype.std_msgs_Int32MultiArray);
-
-Ogrid = rossubscriber('nav_msgs/OccupancyGrid');
+%% Initialization
+% Sub/Pub/Msg
+OGridSub = rossubscriber('/OccupancyGrid', 'nav_msgs/OccupancyGrid');
+GPSSub = rossubscriber('/GPSLocation', 'sensor_msgs/NavSatFix');
+GoalSub = rossubscriber('/GoalCoordinates', 'GOAL MSGTYPE HERE');
+OptimalPathPub = rospublisher('/OptimalPath', 'nav_msgs/Path');            % rostype.std_msgs_Int32MultiArray
+OptimalPathMsg = rosmessage('nav_msgs/Path');
 
 % Get Occupancy Grid from ROS
-map = Ogrid.LatestMessage;
-
+OGridData = receive(OGridSub, 3);       % OGridData = OgridSub.LatestMessage;
+GPSData = receive(GPSSub, 3);           % GPSData = GPSSub.LatestMessage;
+GoalData = receive(GoalSub, 3);         % GoalData = GoalSub.LatestMessage;
 % Get Coordinates of Goal from ROS
 
 % Get State from ROS
 
 % Create a D* Object using the map
+map = OGridData;
+goal = [1, 1];          % TODO: 
 ds = Dstar(map);
 ds.plan(goal);
 
 spath = path(ds, curr_pos);
 
 % Update Path
-map = receive(Ogrid);
+OGridData = receive(Ogrid);
 
 % Publish the path to ROS
 msg = rosmessage(rostype.std_msgs_Int32MultiArray);
 msg.data = spath;
 
-send(path_pub, msg);
+send(OptimalPathPub, msg);

@@ -17,7 +17,7 @@ optimalPath = rosmessage('nav_msgs/Path');  % no instance of sent message yet
 
 % OGridData = OGridSub.LatestMessage;   -- Alternative
 OGridData = receive(OGridSub, 3);       % receives data from sub, 3 sec timeout, disable for testing
-GPAData = receive(GPSSub, 3);           % Receive Raw GPS data, lat and long
+GPSData = receive(GPSSub, 3);           % Receive Raw GPS data, lat and long
 
 %% Establish OGrid, OMatrix, goal for Dstar
 
