@@ -1,5 +1,5 @@
-% To do: should be modified to allow the goal vars to change on
-% the fly.  
+% To do: should be modified to allow the goal-vars to change on
+% the fly. 
 
 function heading_velocity_controller_and_simulation()
 
@@ -8,20 +8,11 @@ function heading_velocity_controller_and_simulation()
     close all;
     clc;
     
-    % Simulation parameters
-    [dt,tend,N] = sim_params();
-
-    % System inputs
-    [x0,m,I,bu,bv,bpsi,theta,w,l,K] = initial_vars();
-    
-    % Create state vector
-    x = state_vector(N,x0);
+    % Simulation setup
+    [dt,tend,N,m,I,bu,bv,bpsi,theta,w,l,K,x,T,u,up,ui,ud,error,int] = sim_setup();
     
     % Set goal variables
     [v_goal,psi_goal] = goal_vars();
-        
-    % Create tracking matrics
-    [T,u,up,ui,ud,error,int] = tracking_matrices(N);
               
     % Controller
     for k = 1:1:N
@@ -46,18 +37,14 @@ function heading_velocity_controller_and_simulation()
     
 end
 
-function [dt,tend,N] = sim_params()
+function [dt,tend,N,m,I,bu,bv,bpsi,theta,w,l,K,x,T,u,up,ui,ud,error,int] = sim_setup()
 
-    % Time variables
+    % Simulation time variables
     dt = .01;           % simulation time step [s]
     tend = 50;          % simulation end time [s]
     N = round(tend/dt); % number of steps [ ]
-
-end
-
-function [x0,m,I,bu,bv,bpsi,theta,w,l,k] = initial_vars()
-
-    % Initial conditions
+    
+    % Model initial conditions
     x0(1) = 0;          % x-position [m]
     x0(2) = 0;          % y-position [m]
     x0(3) = pi;          % psi (heading) [rad]
@@ -65,31 +52,28 @@ function [x0,m,I,bu,bv,bpsi,theta,w,l,k] = initial_vars()
     x0(5) = 0;          % sway (transverse) velocity [m/s]
     x0(6) = 0;          % yaw (heading) velocity [rad/s]
     
-    % State model parameters
+    % Model lumped parameters
     m = 400;                 % mass [kg]
     I = 300;                 % inertia [kg*m^2]
     bu = 100;                 % surge (longitudinal) drag [N*s/m]
     bv = 400;                % sway (transverse) drag [N*s/m]
     bpsi = 400;               % yaw (heading) drag [N*s/(m*rad)]
     
+    % Model geometry
     theta = deg2rad(30);    % thruster mount angle 
     w = 2;                  % width between thrusters [m]
     l = 5;                  % length between thrusters [m]
     
     % Controller gains
     kp = 100;
-    ki = 0.003;
+    ki = 0.03;
     kd = 0.1;
-    k = [kp ki kd];
+    K = [kp ki kd];
     
-end
-
-function x = state_vector(N,x0)
-    
-    % Create vector
+    % Initialize state vector
     x = zeros(6,N);
     
-    % Insert initial conditions
+    % Insert initial conditions into state vector
     x(1,1) = x0(1);     % x-position 
     x(2,1) = x0(2);     % y-position
     x(3,1) = x0(3);     % psi (heading)
@@ -97,17 +81,7 @@ function x = state_vector(N,x0)
     x(5,1) = x0(5);     % sway (transverse) velocity
     x(6,1) = x0(6);     % psi (heading)
     
-end
-
-function [v_goal,psi_goal] = goal_vars()
-   
-    v_goal = 2;                 % goal velocity [m/s]
-    psi_goal = deg2rad(45);    % goal heading [rad]
-
-end
-
-function [T,u,up,ui,ud,error,int] = tracking_matrices(N)
-
+    % Create tracking matrices
     T = zeros(4,N);     % thruster output [N] (max 245 N)
     up = zeros(4,N);    % thurster proportional gain [N]
     ui = zeros(4,N);    % thurster integral gain [N]
@@ -116,6 +90,13 @@ function [T,u,up,ui,ud,error,int] = tracking_matrices(N)
     error = zeros(2,N); % control variable error
     int = zeros(2,N);   % control variable integrator
     
+end
+
+function [v_goal,psi_goal] = goal_vars()
+   
+    v_goal = 2;                 % goal velocity [m/s]
+    psi_goal = deg2rad(45);    % goal heading [rad]
+
 end
 
 function [error,int,u,up,ui,ud] = calculate_gains(k,dt,K,x,v_goal,psi_goal,u,up,ui,ud,error,int)
@@ -261,7 +242,6 @@ function plot_results(N,dt,x,u,up,ui,ud,error)
     subplot(4,1,2);
     plot(tt,u(2,:),'k',tt,up(2,:),'r',tt,ui(2,:),'g',tt,ud(2,:),'b');
     ylabel('T2 [N]');
-    legend('total','proportional','integral','derivative','Location','east');
     grid on;
     subplot(4,1,3);
     plot(tt,u(3,:),'k',tt,up(3,:),'r',tt,ui(3,:),'g',tt,ud(3,:),'b');
@@ -269,9 +249,9 @@ function plot_results(N,dt,x,u,up,ui,ud,error)
     grid on;
     subplot(4,1,4);
     plot(tt,u(4,:),'k',tt,up(4,:),'r',tt,ui(4,:),'g',tt,ud(4,:),'b'); 
-    ylabel('T4 [N]');
-    grid on;
     xlabel('time [s]');
+    ylabel('T4 [N]');
+    legend('total','proportional','integral','derivative','Location','east');
     suptitle('PID Gains vs. Time');
     grid on;
 
