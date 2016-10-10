@@ -238,6 +238,7 @@ function plot_results(N,dt,x,u,up,ui,ud,error)
     subplot(4,1,1);
     plot(tt,u(1,:),'k',tt,up(1,:),'r',tt,ui(1,:),'g',tt,ud(1,:),'b');
     ylabel('T1 [N]');
+    title('PID Gains vs. Time');
     grid on;
     subplot(4,1,2);
     plot(tt,u(2,:),'k',tt,up(2,:),'r',tt,ui(2,:),'g',tt,ud(2,:),'b');
@@ -252,7 +253,6 @@ function plot_results(N,dt,x,u,up,ui,ud,error)
     xlabel('time [s]');
     ylabel('T4 [N]');
     legend('total','proportional','integral','derivative','Location','east');
-    suptitle('PID Gains vs. Time');
     grid on;
 
 end
