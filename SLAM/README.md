@@ -23,11 +23,15 @@ example: from catkin home, `catkin_make_pkg package name`
 `roscore
  roslaunch SLAM slamming.launch`
 6. In RVIZ, check the following:
- * Fixed frame = map (or base_link)
+ * Fixed frame = map (or base_frame)
  * add Grid, reference frame: <Fixed Frame>
  * add Map, Topic /map
  * add Path, topic: /trajectory
  * add Pose, topic: /slam_out_pose
+7. For IMU integration
+ * go to `sudo gedit /opt/ros/indigo/share/razor_imu_9dof/launch/razor-pub-and-display.launch`
+ * Comment out 3D visualization section for now, as it displays an error.
+ * ensure that `/opt/ros/indigo/share/razor_imu_9dof/config` contains the file my_razor.yaml
 
 ### TODO:
 

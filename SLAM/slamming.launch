@@ -1,12 +1,39 @@
 <launch>
 	<!--arguments, base_footprint or base_link"-->
-        <arg name="base_frame" default="base_link"/>
-	<arg name="odom_frame" default="base_link"/>
+
+        <arg name="base_frame" default="base_stabilized"/>
+	<arg name="odom_frame" default="base_stabilized"/>
 	<arg name="scan_subscriber_queue_size" default="0.05"/>
 	<arg name="scan_topic" default="scan"/>
 	<arg name="map_size" default="2048"/>
 	<!--Original 0.050-->
-	<arg name="map_resolution" default="0.1"/>
+	<arg name="map_resolution" default="0.05"/>
+
+	<!-- Arguments for PATH data-->
+	<arg name="trajectory_source_frame_name" default="/base_stabilized"/>
+	<arg name="trajectory_update_rate" default="4"/>
+	<arg name="trajectory_publish_rate" default="0.25"/>
+<!--
+  	<arg name="map_file_path" default="$(find hector_geotiff)/maps"/>
+  	<arg name="map_file_base_name" default="hector_slam_map"/>
+-->
+
+
+	<include
+	  file="$(find razor_imu_9dof)/launch/razor-pub-and-display.launch"
+	/>
+
+	<node 
+	  pkg="hector_imu_attitude_to_tf" 
+	  type="imu_attitude_to_tf_node" 		
+	  name="imu_attitude_to_tf_node" 
+	  output="screen">
+  		
+	  <remap from="imu_topic" to="/imu" />
+  	  <param name="base_stabilized_frame" type="string" value="/base_stabilized" />
+	  <param name="base_frame" type="string" value="/base_frame" />
+	</node>
+
 
         <node
           pkg="urg_node" type="urg_node" name="lidar"
@@ -20,6 +47,7 @@
         >
 		<!--Frame names-->
 		<param name="pub_map_odom_transform" value="true"/>
+		<param name="use_tf_scan_transformation" value="true"/>
     		<param name="map_frame" value="map" />
     		<param name="base_frame" value="$(arg base_frame)"/>
 		<param name="odom_frame" value="$(arg odom_frame)"/>
@@ -48,13 +76,40 @@
 	<!--required tf transform-->
 	<node
 	  pkg="tf" type="static_transform_publisher" name="laser_link_broadcaster"
-	  args="0 0 0 0 0 0 base_link laser 100"
+	  args="0 0 0 0 0 0 $(arg base_frame) laser 100"
 	/>
 
+	<!--Path packages-->
+	<node pkg="hector_trajectory_server" type="hector_trajectory_server" name="hector_trajectory_server" output="screen">
+
+	  <param name="target_frame_name" type="string" value="/map" />
+	  <param name="source_frame_name" type="string" value="$(arg trajectory_source_frame_name)" />
+    	  <param name="trajectory_update_rate" type="double" value="$(arg trajectory_update_rate)" />
+    	  <param name="trajectory_publish_rate" type="double" value="$(arg trajectory_publish_rate)" />
+  	</node>
+
+<!--
+  	<node pkg="hector_geotiff" type="geotiff_node" name="hector_geotiff_node" output="screen" launch-prefix="nice -n 15">
+    	  <remap from="map" to="/dynamic_map" />
+    	  <param name="map_file_path" type="string" value="$(arg map_file_path)" />
+    	  <param name="map_file_base_name" type="string" value="$(arg map_file_base_name)" />
+    	  <param name="geotiff_save_period" type="double" value="0" />
+    	  <param name="draw_background_checkerboard" type="bool" value="true" />
+    	  <param name="draw_free_space_grid" type="bool" value="true" />
+    	  <param name="plugins" type="string" value="hector_geotiff_plugins/TrajectoryMapWriter" />
+  	</node>
+-->
 	<node
 	  pkg="rviz" type="rviz" name="rviz"
 	>
 	</node>
+	
+	<node 
+	  pkg="rosbag" type="record" name="rosbag_recording" output="screen"
+	  
+	  args=" -o bag /map /trajectory /imu /map_metadata /initialpose"
+	/>
+	
 
 
 </launch>
