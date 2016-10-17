@@ -3,14 +3,12 @@
 
 using namespace std;
 
-//
-// Created by Kelan on 10/16/2016.
-//
 class state() {
     motor = enable;
     path = enable;
     lidar = enable;
     camera = enable;
+    event = survey;
 }
 
 class ~state() {
@@ -31,7 +29,14 @@ void change_status (string system, Status status) {
         case 'camera':
             camera = status;
             break;
+        case 'event':
+            event = status;
+            break;
         default:
             break;
     }
+}
+
+Event get_event() {
+    return event;
 }
