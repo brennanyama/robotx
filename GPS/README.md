@@ -25,6 +25,7 @@ Open 3 terminals
 1st Terminal
 
 `roscd`
+
 `roscore`
 
 2nd Terminal
