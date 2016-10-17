@@ -1,4 +1,4 @@
-*Razor 9DOF IMU*
+# Razor 9DOF IMU
 ROS topic: /imu
 Message type: sensor_msgs/Imu.msg
 
