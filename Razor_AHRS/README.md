@@ -5,32 +5,32 @@ Message type: sensor_msgs/Imu.msg
 ROS Indigo: http://wiki.ros.org/razor_imu_9dof
 Arduino: https://www.sparkfun.com/products/10736
 
-Installation:
+## Installation:
 1. Upload Arduino firmware to IMU
 2. Install ROS package
-   $ sudo apt-get install ros-indigo-razor-imu-9dof
+   `sudo apt-get install ros-indigo-razor-imu-9dof
 3. Copy config file
-   $ roscd razor_imu_9dof/config
-   $ cp razor.yaml my_razor.yaml
+   `roscd razor_imu_9dof/config`
+   `cp razor.yaml my_razor.yaml`
 4. Run IMU
-   $ roslaunch razor_imu_9dof razor-pub.launch
+   `roslaunch razor_imu_9dof razor-pub.launch`
 5. Calibrate IMU:  instructions at http://wiki.ros.org/razor_imu_9dof
 6. Check imu topic
-    $ rostopic echo /imu
+    `rostopic echo /imu`
 
 
-To Publish and Run Graphic:
+## To Publish and Run Graphic:
 CTL+ALT+T (if you don’t have terminal open)
 Type in Command Line: roslaunch razor_imu_9dof razor-pub-and-display.launch
 
-To Publish Data Only:
+## To Publish Data Only:
 CTL+ALT+T (if you don’t have terminal open)
 Type in Command Line: roslaunch razor_imu_9dof razor-pub.launch
 
-To View Published Data:
+## To View Published Data:
 YOU MUST PUBLISH DATA FIRST AND KEEP PUBLISHING IN ORDER TO VIEW PUBLISHED DATA.
 
-Open another terminal window - right click on the first terminal window and select “Open Terminal”
+## Open another terminal window - right click on the first terminal window and select “Open Terminal”
 Type in Command Line:      rostopic list
 			        rostopic echo /imu
 
