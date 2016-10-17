@@ -1,27 +1,38 @@
-% Initialize ROS Interface
-%clear all;
-%rosshutdown;
-%rosinit('localhost');
+%% Initialize ROS Interface
+clear all;                  % for testing
+rosshutdown;                % for testing
+rosinit('localhost');       % for testing
 
 % Get Occupancy Grid from ROS
-msg = rosmessage('nav_msgs/OccupancyGrid');
-msg.Info.Height = 10; 
-msg.Info.Width = 10;
-msg.Info.Resolution = 0.1;
-msg.Data = 100*rand(100,1);
+%msg = rosmessage('nav_msgs/OccupancyGrid');
+%msg.Info.Height = 10; 
+%msg.Info.Width = 10;
+%msg.Info.Resolution = 0.1;
+%msg.Data = 100*rand(100,1);
 
-%%
-map = randn(100, 100);
-map = floor(map);
-dimm = size(map);
+OGridSub = rossubscriber('/OccupancyGrid', 'nav_msgs/OccupancyGrid'); % TODO establish which topic for OGrid msgs
+GPSSub = rossubscriber('GPSLocation', 'sensor_msgs/NavSatFix');       % TODO establish topic
+OGridPub = rospublisher('/OptimalPath', 'nav_msgs/Path');
+optimalPath = rosmessage('nav_msgs/Path');  % no instance of sent message yet
 
-% Get Position from ROS
-pos = [50 50];              % Coordinates of starting position (x, y)
+% OGridData = OGridSub.LatestMessage;   -- Alternative
+OGridData = receive(OGridSub, 3);       % receives data from sub, 3 sec timeout, disable for testing
+GPSData = receive(GPSSub, 3);           % Receive Raw GPS data, lat and long
+
+%% Establish OGrid, OMatrix, goal for Dstar
+
+curOGrid = OGridData;       % This should be a BinaryOccupancyGrid
+map = convG2M(curOGrid);    % converts BOG to a matrix for algorithm
+pos = [50, 50];             % TODO: get position from ROS
+goal = [1, 1];              % get goal from ROS or use arbitrary goal
+
+%map = randn(100, 100);     % enable for testing  
+%map = floor(map);
+%dimm = size(map);
+
+%% Dstar algorithm start       !! Algorithm sees '-1' as obstruction
 parent = pos;               % Initialize the parent node
-
-% Get Destination
-goal = [1, 1];               % Coordinates of destination (x, y)
-
+dimm = size(map);
 % Initialization
 OPEN = [];                  % Nodes that are to be explored
 open_count = 1;             % Number of nodes in OPEN list

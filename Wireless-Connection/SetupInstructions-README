@@ -1,0 +1,86 @@
+Instructions for setting up Tp-link router:
+!!!!NOTE: In order for computers in ROS to communicate you must be connected to router network!!!!!
+1. WIRING THE ROUTER:
+  - Power cord from Nuc to power outlet(2-prong)
+  - Ethernet cable in LAN port of router (port color GOLD) to ethernet port of Nuc
+  
+2. CONNECTING TO TPLINK: In Network list select "Wired Connection 1" (Can find list on desktop by selecting wifi icon in upper left corner).
+
+3. ENTERING SETUP PAGE: this is to check settings, DHCP client lists, and to reserve addresses, IP & MAC Binding.
+ - Go on web browser: type tplink default IP address in address bar: 192.168.0.1
+ - If Login page shows: user- admin  password- admin
+    *WIRELESS SETTINGS: 
+    HINT: keep names consistent throughout ip addressing, host naming and SSID assignments.
+       +Wireless Settings: in "Wireless Settings" Tab
+          - Wireless Network should be RIPLab; do not change please unless Nathan is notified.
+          - You should be able to find wireless tplink as RIPLab, can connect to it after Security settings are configured.
+       +Security: in "Wireless Security"
+          - checkmark WPA/WPA2 -personal(Recommended)
+          - Version: WPA2-PSK
+          - Encryption: AES 
+          - WIRELESS PASSWORD: Aut0m@tion
+          - Hit Save
+     *DHCP SETTINGS:
+      +DHCP settings: in DHCP Settings Tab
+        - can set IP range in start IP and end IP boxes
+        - can find and set Default Gateway
+      +DHCP Client List: See what device is on the network, find MAC addresses of devices on network
+        - Hit refresh to see updated changes as needed.
+      +To Set Static IP--Address Reservation: DO NOT USE! It is better to reserve the computer's IP addresses on computer network list on desktop--
+        - Hit Wifi symbol in upper lefthand corner: Edit Connections: select RIPLab--select EDIT
+        - in IPv4Settings: Method: Manual. Addresses: can add IP address of only computer you are on and its devices here---MAKE SURE THE IP MATCHES HOST FILE IN TERMINAL
+              - Address: desired ip of device/computer
+              - Netmask: 255.255.255.0 (ALWAYS TYPE THIS)
+              - Gateway: same as ip address of computer 
+              - After address(s) have been entered, hit save
+       *+after making DHCP settings change reboot network by going to system tools: reboot: hit reboot button. 
+
+4. CONNECTING OTHER COMPUTERS AND DEVICES TO RIPLAB:
+Note: ROS and Ubuntu keeps a file of various devices, their IP addresses and their hostname(at least on the terminal). 
+When on RIPLab network, you can have these devices interact with each other using their hostname. Make sure that IP addresses set to the 
+terminal are the same as the ones on this file. Nathan has already added Nuc and Groundstation to this file. Both computers have their host file
+with this information.
+
+--file: /etc/hosts
+IP Address                Hostname
+192.168.0.15              Nuc
+192.168.0.100             Groundstation
+
+If somehow you do not see these IPs and host names in this file please add them. Also check that these IPs are assigned to RIPLab.
+
+To open and edit host file:
+in terminal enter: sudo vi /etc/hosts
+->terminal says: [sudo] password for [user name]:
+enter: Aut0m@tion
+You might get a page with a disclaimer of a swap file, ignore and hit enter.
+Edit file and make sure IPs match on Groundstation and Nuc.
+--See vi commands in Vi_Commands file in GIThub to learn how to navigate vim text editor, which is what we are using to edit the host file. DONOT USE GEDIT!!!
+
+
+To Check and add IPs to RIPlLab: 
+  - go to edit connections in network lists
+  - select RIPLab and EDIT
+  - in IPv4Settings tab: make sure Method is "manaual"
+    - check if desired IP is listed 
+    - if not click Add, type IP, NETMASK is always 255.255.255.0, Gateway is same as IP.
+    - Hit save 
+  - This only needs to be done for the computer you are physically using. 
+ 
+5. Testing Communication:
+Now Nuc and Groundstation should be connected to the network and able to communicate.
+
+To test this:
+- (testing User computer) in terminal enter: Ping [your computer's host name on host file]
+- If it works you should see the terminal say:"64 bytes from [computer you are pinging] ([computer's IP]): icmp_seq=[1] ttl=64 time=0.015ms"
+it makes a continuous list of this, to end press ctrl c. 
+
+- If it doesn't work terminal should be making same list except is says HOST is unreachable and/or gives an error.
+
+- (testing communication with other computer) in terminal enter: Ping [enter other computer]. 
+
+For Troubleshooting: follow directions above to see if the listed actions were done, or see troubleshooting file on GIThub,
+or call Nathan at 808-627-2147.
+
+**Please note the error somewhere, so it can be tracked, followed by Nathan, and added to troubleshoot page.**
+  
+ 

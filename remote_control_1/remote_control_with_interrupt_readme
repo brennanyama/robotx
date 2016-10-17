@@ -1,3 +1,12 @@
+update 09/29/16
+mapped inputs from ROS to 8 bit PWM signal
+Takes in commands from remote control and ROS inputs. 
+Outputs are mapped to servo motors on VEX controllers. 
+Publishes a boolean to ROS for eventual MATLAB interrupt
+
+pin 11, 18 are no longer used
+pin 30 is a digital pin designed for manual take over -- needs a source for switch 
+
 remote_control_with_interrupt_readme
 
 Requires:
@@ -10,7 +19,7 @@ Currently able to use the left joystick for forward and reverse. The right joyst
 
 On the Mega, the pin set up is as follows:
 
-	Pin 3,4,5 should go to the RX
+	Pin 3,4 should go to the RX
 	Pin 18 should go to power on the RX for the interrupt
 	Pin 11(optional) is just for testing the interrupt
-	Pin 12,8,9,10 go to the motor controllers for 1,2,3,4 respectively
+	Pin 8,9,10,11 go to the motor controllers for 1,2,3,4 respectively
