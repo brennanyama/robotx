@@ -1,4 +1,4 @@
-Helpful links:
+# Helpful links:
 Troubleshooting: http://www.sustainablenetworks.org/CIS623/?page_id=142
 GPS Shield Kit: https://learn.sparkfun.com/tutorials/gps-shield-hookup-guide
 Library for GPS: http://arduiniana.org/libraries/tinygpsplus/
@@ -14,23 +14,23 @@ When following this page (http://wiki.ros.org/nmea_navsat_driver):
 ** ALSO NOTE that your port may change i.e. /dev/ttyACM0 or /dev/ttyACM1
 
 
-Arduino Upload:
+# Arduino Upload:
 Put into dline while uploading onto Arduino
 Won’t work otherwise
 Put on uart and change baud rate( preferably 4800)
 
-Publishing to ROS:
+# Publishing to ROS:
 Open 3 terminals
 
 1st Terminal
 
-roscd
-roscore
+`roscd`
+`roscore`
 
 2nd Terminal
   
-rosrun nmea_navsat_driver nmea_serial_driver _port:=/dev/ttyUSB0 _baud:=4800    (NOTE: PORT MAY BE /dev/ttyACM0)
+`rosrun nmea_navsat_driver nmea_serial_driver _port:=/dev/ttyUSB0 _baud:=4800`    (NOTE: PORT MAY BE /dev/ttyACM0)
 
 3rd Terminal
  
-rostopic echo /fix
+`rostopic echo /fix`
