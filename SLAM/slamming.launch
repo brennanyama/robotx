@@ -7,7 +7,7 @@
 	<arg name="scan_topic" default="scan"/>
 	<arg name="map_size" default="2048"/>
 	<!--Original 0.050-->
-	<arg name="map_resolution" default="0.05"/>
+	<arg name="map_resolution" default="0.1"/>
 
 	<!-- Arguments for PATH data-->
 	<arg name="trajectory_source_frame_name" default="/base_stabilized"/>
@@ -55,8 +55,8 @@
 		<!-- Map size / start point -->
     		<param name="map_resolution" value="$(arg map_resolution)"/>
     		<param name="map_size" value="$(arg map_size)"/>
-    		<param name="map_start_x" value="0.5"/>
-    		<param name="map_start_y" value="0.5" />
+    		<param name="map_start_x" value="0.0"/>
+    		<param name="map_start_y" value="0.0" />
 		<param name="map_multi_res_levels" value="2" />
 
 		<!-- Map update parameters -->
