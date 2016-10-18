@@ -1,0 +1,23 @@
+%Nathan Park
+%Event Handler: Node that will recieve coordinates from mapping, and heading and color from camera. 
+%Will send Mission Planner coordinates, heading and color of objects.
+
+%Initializing Lidar variables
+arr map[] = 0 %array of coordinates from OGrid
+arr object[] = map == 0.9 %value for a coordinate occupied
+int a = 2
+
+while(a > 2)
+sub = rossubscriber('map',nav_msgs/OccupancyGrid) %subrcibing to map topic
+scan = receive(sub) %get set of points after next Lidar scan.
+arr map[] = int8[] %assigning map values from OGrid
+arr object[]
+if  object <= 0 %if no objects found rescan
+    scan = receive(sub)
+else
+    M = min(object) %based on path planner node, distance is from robot to object. Taking closest object
+    %rospublish to mission planner node topic; will be moved down wit
+    %output from camera. Will ouptut minimum distance. 
+end 
+
+%need to get camera inputs, create a loop that will have objects captured in a scan to be processed one at a time.
