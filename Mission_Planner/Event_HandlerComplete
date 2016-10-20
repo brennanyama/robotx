@@ -1,0 +1,28 @@
+%Nathan Park
+%Note: camera topics and nodes are not et up yet.
+rosshutdown
+rosinit
+posesub = rossubscriber('odom', 'nav_msgs/Odometry') %will use odom to get heading of the boat from Lidar, if Lidar has odom
+camerasub = rossubscriber('camera', '_msgs/heading'); %subscribe to camera topic for heading
+colorsub = rosssubscriber('camera', '_msgs/color'); %subscribe to camera topic for color
+camerascan = recieve(camerasub) %recieve heading of objects from camera   
+colorscan = receive(colorsub) %recieve color represented by an integer 
+mapsub = rossubscriber('map','nav_msgs/OccupancyGrid'); %subrcibing to map topic 
+mapscan = receive(mapsub) %get set of points after next Lidar scan. 
+conv02M(occupancyGrid)
+
+Occupied = tempM ==1
+n = nume1(Occupied)
+
+for i = 1:n
+    pt = Occupied(i,1)
+    phi %function for object heading calculated by camera node
+    yaw %function for object heading calculated by mapping node
+    
+    if mod((phi + yaw),70) == 0  %still working out linking coordinates to right heading. I got it to check they are in the same field of view. 
+        
+        heading = phi
+        event_obj = [pt, heading, color]
+    else %not yet sure how to compensate if heading readings are not matching up
+    end
+end
