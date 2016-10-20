@@ -2,7 +2,7 @@ function matrix = convO2M(occupancyGrid)
 
 
 map=readBinaryOccupancyGrid(occupancyGrid);
-inflate(map, 0.05);
+%inflate(map, 0.05);
 
 size=(map.GridSize);
 resolution = map.Resolution;

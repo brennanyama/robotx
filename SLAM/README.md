@@ -1,10 +1,27 @@
 # SLAM changelog/instructions
 
+## slam.launch INFO:
 
+This launch file uses the LIDAR and IMU to create and fill an occupancy grid. The following are the grid specs:
+
+* RESOLUTION: 0.1
+* MAP SIZE: 1024
+* MAP SIZE in METERS: 100m x 100m
+* MAP STARTING LOCATION: The center is 0m, map extends in x, y, -x, and -y by 50m
+
+The following are packages that are used in the launch file:
+
+* razor-pub-and-display - to integrate IMU with LIDAR
+* urg_node - main package for LIDAR
+* hector_mapping - main package that takes transformed lidar and imu data and fills an occupancy grid
+* tf - used to transform all frames so hector_mapping can make sense of info
+* hector_geotiff - used to display previous path
 
 ### Changelog
 
 * 10/8/2016: Created launch file that uses the tf, urg_node, and hector_mapping packages. Uses only laser data from LIDAR, no IMU or GPS integration yet. Only 2D currently.
+
+* 10/19/2016: Modified slam to reduce time it took for Dstar to run. Slam does not record a bagfile, slamrecord does.
 
 
 ### Instructions
@@ -33,12 +50,3 @@ example: from catkin home, `catkin_make_pkg package name`
  * Comment out 3D visualization section for now, as it displays an error.
  * ensure that `/opt/ros/indigo/share/razor_imu_9dof/config` contains the file my_razor.yaml
 
-### TODO:
-
-1. Incorporate IMU and add tf for odom frame to get a more accurate reading of surroundings
-2. Check /OccupancyGrid data, check compatibility with D* Lite
-3. 3D vizualization?!?
-
-### Troubleshooting
-
-blah
