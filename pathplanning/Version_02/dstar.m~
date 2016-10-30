@@ -24,7 +24,7 @@ OGridData = receive(OGridSub);
 % Create a D* Object using the map
 map = convO2M(OGridData);
 goal = [570, 275];          % TODO: receive start from ROS
-start= [512, 512];
+start=[512, 512];
 MapConversionFinished=1
 ds = Dstar(map);
 DSMapFinished=1
