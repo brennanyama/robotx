@@ -5,7 +5,7 @@ rosinit
 
 % SUBSCRIBERS
 posesub = rossubscriber('/imu', 'sensor_msgs/Imu'); %will use odom to get heading of the boat from Lidar, if Lidar has odom
-pose2sub = rossubscriber('/slam_out_pose', 'geometry_msgs/PoseStamped');
+pose2sub = rossubscriber('/poseupdate', 'geometry_msgs/PoseWithCovarianceStamped');
 mapsub = rossubscriber('/map','nav_msgs/OccupancyGrid'); %subrcibing to map topic 
 camerasub = rossubscriber('/camera', '_msgs/heading'); %subscribe to camera topic for heading
 colorsub = rosssubscriber('/camera', '_msgs/color'); %subscribe to camera topic for color
@@ -15,7 +15,7 @@ camerascan = recieve(camerasub) %recieve heading of objects from camera
 colorscan = receive(colorsub) %recieve color represented by an integer 
 mapscan = receive(mapsub) %get set of points after next Lidar scan. 
 
-conv02M(occupancyGrid)
+tempM = conv02M(occupancyGrid)
 
 Occupied = tempM ==1
 n = nume1(Occupied)
