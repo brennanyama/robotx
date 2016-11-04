@@ -62,25 +62,25 @@ void loop(){
   rotate = map(ch2, 1130, 1960, 100, 245);
   linear = map(ch1, 1130, 1869, 245, 100);
   inv_rotate = map(rotate, 100, 245, 245, 100);
-  back_linear = map(ch1, 1130, 1960, 240, 130); 
+  back_linear = map(linear, 245, 100, 100, 245); 
   
   if(linear > 50 && linear < 255){
     noInterrupts();
-    analogWrite(8, linear);
-    analogWrite(9, linear);
+    analogWrite(8, back_linear);
+    analogWrite(9, back_linear);
     analogWrite(10, linear);
     analogWrite(11, linear);
 
     if(rotate> 180){ //rotate right
-      analogWrite(8, inv_rotate);
-      analogWrite(9, rotate);
+      analogWrite(8, rotate);
+      analogWrite(9, inv_rotate);
       analogWrite(10, rotate);
       analogWrite(11, inv_rotate);   
     }
     
     if(rotate<140){ //rotate left
-      analogWrite(8, inv_rotate);
-      analogWrite(9, rotate);
+      analogWrite(8, rotate);
+      analogWrite(9, inv_rotate);
       analogWrite(10, rotate);
       analogWrite(11, inv_rotate);
     }
