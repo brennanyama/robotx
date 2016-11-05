@@ -1,8 +1,8 @@
-function matrix = convO2M(occupancyGrid)
+function [matrix, start] = convO2M(occupancyGrid, currLocation)
 
-
+% For Map conversion
 map=readBinaryOccupancyGrid(occupancyGrid);
-%inflate(map, 0.05);
+inflate(map, 0.02);
 
 size=(map.GridSize);
 resolution = map.Resolution;
@@ -20,4 +20,11 @@ for xx=1:size(1)
         tempM(xx, yy) = getOccupancy(map, [xAdjusted, yAdjusted]);
     end
 end
+
 matrix = tempM;
+
+% For currX, currY conversion
+xAdjusted = (xWorld(1)+(currLocation(1)/resolution));
+yAdjusted = (yWorld(1)+(currLocation(2)/resolution));
+start = [xAdjusted, yAdjusted];
+
