@@ -19,7 +19,7 @@ function full_go_forward(k)
     disp('current iteration: ');
     disp(k);
     
-    T=[60;60;60;60]
+    T=[60;60;60;60] % 0 should be full reverse, 50 should be neutral, 100 should be full forward
     
     chatterpub1 = rospublisher('/motor_q1', 'std_msgs/UInt16')
     chatterpub2 = rospublisher('/motor_q2', 'std_msgs/UInt16')

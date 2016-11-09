@@ -1,3 +1,4 @@
-As of October 24, the current working model from remote control is called:
+As of November 2nd, the current working model from remote control is called:
 
-rc_testing_without_voltage_divider
+WAM_v_arduino_controller was tested on the WAMV with all motors. It works  with manual control, autonomous is not working as desired, and manual takeover works properly. 
+

@@ -83,4 +83,9 @@ or call Nathan at 808-627-2147.
 
 **Please note the error somewhere, so it can be tracked, followed by Nathan, and added to troubleshoot page.**
   
- 
+ SSH INSTRUCTIONS
+ To login from ground station to nuc, 
+ 1. open terminal on ground station
+ 2. type "ssh ros@nuc"
+ 3. enter password
+ 4. you did it, enjoy it!

@@ -4,30 +4,47 @@
 
 
 %% Initialization
-% Sub/Pub/Msg
+% Subscribers
 OGridSub = rossubscriber('/map', 'nav_msgs/OccupancyGrid');
 GPSSub = rossubscriber('/GPSLocation', 'sensor_msgs/NavSatFix');
 GoalX = rossubscriber('/GoalX', 'std_msgs/Int16');
 GoalY = rossubscriber('/GoalY', 'std_msgs/Int16');
+PoseSub = rossubscriber('/poseupdate', 'geometry_msgs/PoseWithCovarianceStamped');
+
+% Publishers
 OptimalPathxPub = rospublisher('/pathX', 'std_msgs/Int16MultiArray');
 OptimalPathyPub = rospublisher('/pathY', 'std_msgs/Int16MultiArray');
+
+% Messages
 PathxMsg = rosmessage(OptimalPathxPub);
 PathyMsg = rosmessage(OptimalPathyPub);
 
-% Receive Occupancy grid, gps, goal, and start information from ROS
-OGridData = receive(OGridSub, 3);       
-GPSData = receive(GPSSub, 3);           % GPSData = GPSSub.LatestMessage;
-gX = receive(GoalX, 3);
-gY = receive(GoalY, 3);
+% Receivers
+OGridData = receive(OGridSub); 
+PoseData = receive(PoseSub);      
+% GPSData = receive(GPSSub);           % GPSData = GPSSub.LatestMessage;
+% gX = receive(GoalX);
+% gY = receive(GoalY);
+
+% Interpret data
+currX = roundn(PoseData.Pose.Pose.Position.X, -1);
+currY = roundn(PoseData.Pose.Pose.Position.Y, -1);
+currPos = [currX, currY];
 
 
 % Create a D* Object using the map
-map = convO2M(OGridData);
-goal = [gX, gY];          % TODO: receive start from ROS
-start=[0, 0];
+[map, currPos] = convO2M(OGridData, currPos)
+goal = [570, 275];          % TODO: receive start from ROS
+start= currPos;		    % [512, 512]
+MapConversionFinished=1
 ds = Dstar(map);
+DSMapFinished=1
 ds.plan(goal);
+
 spath = ds.path(start);
+
+spath
+
 
 % Publish path information
 PathxMsg.Data = spath(:, 1);

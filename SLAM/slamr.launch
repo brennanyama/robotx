@@ -104,10 +104,10 @@
 	>
 	</node>
 	
-	<node 
+	<node
 	  pkg="rosbag" type="record" name="rosbag_recording" output="screen"
-	  
-	  args=" -a -o bag /map /trajectory"
+
+	  args=" -a -o bag"
 	/>
 	
 
