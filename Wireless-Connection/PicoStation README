@@ -1,0 +1,8 @@
+ Set up: 
+ 
+ Turn off other connections, and power the pico station. 
+ Connect the picostation to the computer.
+ In the internet browser enter the ip address in the search bar: 192.169.1.20 
+ At the login page enter "ubtn" for both user and password.
+ In the settings page click lock AP, and select the MAC address of the router. 
+ The Router should be now connected to the picostation.
