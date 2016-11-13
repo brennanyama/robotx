@@ -144,8 +144,4 @@ function [u,up,ui,ud,error,int] = calculate_gains(k,time_params,pid_gains,u,up,u
     
     % Limit thrust control effort
     u = limit_thrust(u,k,limit_mode);
-    
-    % Convert thrust to motor controller duty cycle
-    %u = thrust2dutycycle(u);
-        
 end

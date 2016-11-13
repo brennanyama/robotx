@@ -3,9 +3,12 @@
 % Subscriptions
     % Mission Planner
         OGridSub = rossubscriber('/map', 'nav_msgs/OccupancyGrid');     %Occupancy Grid from ROS
-        PoseSub = rossubscriber('/poseupdate', 'geometry_msgs/PoseWithCovarianceStamped');  %Orientation of WAM-V from LiDAR
+        PoseSub = rossubscriber('/poseupdate', 'geometry_msgs/PoseWithCovarianceStamped');  %Orientation of WAM-V from LiDAR 
         CameraHeadSub = rossubscriber('/cameraHead', 'geometry_msgs/Pose');     %Orientation of WAM-V from camera
         CameraColorSub = rossubscriber('/cameraColor', 'std_msgs/UInt8');       %Color from camera
+        
+    % Path Planner
+        GPSSub = rossubscriber('/GPSLocation', 'sensor_msgs/NavSatFix');
         
 % Publications
     % Arduino
@@ -28,8 +31,12 @@
         m_pub = [mQ1_pub,mQ2_pub,mQ3_pub,mQ4_pub];
         m_msg = [mQ1_msg,mQ2_msg,mQ3_msg,mQ4_msg];
 
-
+% Initialize variables
 tic;                % Begin timer, used by motion controller
+k = 1;
+event_map = zeros([1024, 1024]);    % Map used to record events
+event_flag = false;                 % Set to true when a new event is detected
+
 while (1)           % Main loop, condition should be changed to ROS is running
     % Receivers
     OGridData = receive(OGridSub);              % receive message from /map topic
@@ -39,10 +46,12 @@ while (1)           % Main loop, condition should be changed to ROS is running
 %    CameraColorData = receive(CameraColorSub);  % receive message from
 %    /cameraColor topic
 disp('Messages Received');
+disp(toc);
     % Extract relevant data from ROS messages
     currentX = PoseData.Pose.Pose.Position.X;   % current X position SLAM estimate
     currentY = PoseData.Pose.Pose.Position.Y;   % current Y position SLAM estimate
     rotationZ = PoseData.Pose.Pose.Orientation.Z;   % current heading orientation
+    map = convO2M(OGridData, [currentX, currentY]);
 
 %    phi = CameraHeadData;                       % angle of a detected color
     phi = 30;
@@ -51,10 +60,21 @@ disp('Messages Received');
     
     % Event Handler
 %    [xObj, yObj] = event_location(currentX, currentY, rotationZ, phi, map);
+%    event_map(xObj, yObj) = CameraColorData;           % Update event map
+    event_flag = true;
+
+    % Wapoint Descision Logic - sets goalX and goalY coordinates
+    if (event_flag)
+        [destX, destY] = mission_plan(event_map, currentX, currentY);
+    end
+    
+    % Shortest Path using D*
+    if (length(destX) > 0)
+        goal_vars = find_path(currentX, currentY, destX(1), destY(1), map);
+    end
     
     % Motion Controller
     [time_params,lumped_params,geometry_params,pid_gains,control_tolerances,control_maximums,x,u,up,ui,ud,MC,error,int,behavior] = sim_setup();
-    goal_vars = goal_vars();                %Set goal variables
     
         % Calculate error matrix
         error = update_error(k,x,goal_vars,control_maximums,error);
@@ -70,5 +90,8 @@ disp('Messages Received');
         
         % Simulate Plant
         x = plant(k,time_params,x,u,lumped_params,geometry_params);
+        
+        % Update Loop Variables
+        k = int32(mod((k+1), 50000));
     
 end
