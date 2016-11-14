@@ -1,4 +1,4 @@
-function waypoint_controller_and_simulation()
+function waypoint_position_controller_and_simulation()
 
     % Clear workspace
     clear all;
@@ -6,7 +6,7 @@ function waypoint_controller_and_simulation()
     clc;
     
     % Simulation setup
-    [time_params,lumped_params,geometry_params,pid_gains,control_tolerances,control_maximums,x,u,up,ui,ud,MC,error,int,behavior,m_pub,m_msg] = sim_setup();
+    [time_params,lumped_params,geometry_params,pid_gains,control_tolerances,control_maximums,x,u,up,ui,ud,error,int,behavior] = sim_setup();
     
     % Set goal variables
     goal_vars = goal_vars();
@@ -22,9 +22,6 @@ function waypoint_controller_and_simulation()
         
         % Calculate error and PID gains for behavior
         [u,up,ui,ud,error,int] = calculate_gains(k,time_params,pid_gains,u,up,ui,ud,error,int,behavior);
-        
-        % Publish motor command
-        publish_motor_commands(u,MC,k,m_pub,m_msg);
         
         % Simulate Plant
         x = plant(k,time_params,x,u,lumped_params,geometry_params);
@@ -42,7 +39,7 @@ function waypoint_controller_and_simulation()
     
 end
 
-function [time_params,lumped_params,geometry_params,pid_gains,control_tolerances,control_maximums,x,u,up,ui,ud,MC,error,int,behavior,m_pub,m_msg] = sim_setup()
+function [time_params,lumped_params,geometry_params,pid_gains,control_tolerances,control_maximums,x,u,up,ui,ud,error,int,behavior] = sim_setup()
 
     % Time variables
     dt = .01;                       % simulation time step [s]
@@ -73,13 +70,18 @@ function [time_params,lumped_params,geometry_params,pid_gains,control_tolerances
     geometry_params = [theta,w,l];  % output matrix
     
     % Controller gains
-    kp_psi = 10;
+    kp_pos = 1;
+    ki_pos = 0;
+    kd_pos = 5;
+    kp_psi = 50;
     ki_psi = 0;
     kd_psi = 0;
     kp_vel = 20;
     ki_vel = 0;
     kd_vel = 10;
-    pid_gains = [kp_psi,ki_psi,kd_psi,kp_vel,ki_vel,kd_vel];
+    pid_gains = [kp_pos,ki_pos,kd_pos,...
+        kp_psi,ki_psi,kd_psi,...
+        kp_vel,ki_vel,kd_vel];
     
     % Control tolerances
     GRT = 0.5;                                          % goal radius tolerance [m]
@@ -115,25 +117,10 @@ function [time_params,lumped_params,geometry_params,pid_gains,control_tolerances
     ui = zeros(4,N);            % thurster integral gain [N]
     ud = zeros(4,N);            % thurster derivative gain [N]
     u = zeros(4,N);             % thurster total gain [N]
-    MC = zeros(4,N);            % motor command matrix [%]
     error = zeros(9,N);         % control variable error
     int = zeros(9,N);           % control variable integrator
     behavior = zeros(1,N);      % behavior tracking matrix
     
-    % Set up motor publisher
-    mQ1_pub = rospublisher('/motor_q1');        % create Matlab publisher to Q1 motor
-    mQ2_pub = rospublisher('/motor_q2');        % create Matlab publisher to Q2 motor
-    mQ3_pub = rospublisher('/motor_q3');        % create Matlab publisher to Q3 motor
-    mQ4_pub = rospublisher('/motor_q4');        % create Matlab publisher to Q4 motor
-    m_pub = [mQ1_pub,mQ2_pub,mQ3_pub,mQ4_pub];  % output matrix
-    
-    % Create servo message
-    mQ1_msg = rosmessage(mQ1_pub);              % create blank ros message for /motor_q1
-    mQ2_msg = rosmessage(mQ2_pub);              % create blank ros message for /motor_q2
-    mQ3_msg = rosmessage(mQ3_pub);              % create blank ros message for /motor_q3
-    mQ4_msg = rosmessage(mQ4_pub);              % create blank ros message for /motor_q4
-    m_msg = [mQ1_msg,mQ2_msg,mQ3_msg,mQ4_msg];  % output matrix
-       
 end
 
 function goal_vars = goal_vars()
@@ -164,19 +151,25 @@ end
 
 function behavior = select_behavior(k,x,control_tolerances,error,behavior)
     
-    if error(4,k) > control_tolerances(1)                                   % robot is not within goal radius tolerance
-        if abs(error(5,k)) > control_tolerances(2)                          % robot is not on within path heading tolerance
-            behavior(1,k) = 1;
-        else
-            behavior(1,k) = 2;
-        end
-    else                                                                    % robot is within goal radius tolerance
-        if abs(x(4,k)) || abs(x(5,k)) > control_tolerances(4)               % drive velocity to zero
-            behavior(1,k) = 3;
-        else
-            behavior(1,k) = 4;
-        end
+    if abs(error(5,k)) > control_tolerances(2)                              % robot is not on within path heading tolerance
+        behavior(1,k) = 1;
+    else
+        behavior(1,k) = 2;
     end
+
+%     if error(4,k) > control_tolerances(1)                                   % robot is not within goal radius tolerance
+%         if abs(error(5,k)) > control_tolerances(2)                          % robot is not on within path heading tolerance
+%             behavior(1,k) = 1;
+%         else
+%             behavior(1,k) = 2;
+%         end
+%     else                                                                    % robot is within goal radius tolerance
+%         if abs(x(4,k)) || abs(x(5,k)) > control_tolerances(4)               % drive velocity to zero
+%             behavior(1,k) = 3;
+%         else
+%             behavior(1,k) = 4;
+%         end
+%     end
 
 end
 
@@ -184,16 +177,16 @@ function [u,up,ui,ud,error,int] = calculate_gains(k,time_params,pid_gains,u,up,u
 
     % Behavior Code
     % 1: control robot heading to path heading within PHT
-    % 2: drive straight towards waypoint, control velocity
+    % 2: drive straight towards waypoint, control position
     % 3: control robot surge and sway velocity to zero within ST
     % 4: control robot heading to goal heading within GHT
 
     if behavior(1,k) == 1
         % Proportional gain
-        up(1,k) = pid_gains(1)*error(5,k);                                  % correct path heading to within achieved heading
-        up(2,k) = -pid_gains(1)*error(5,k);
-        up(3,k) = -pid_gains(1)*error(5,k);
-        up(4,k) = pid_gains(1)*error(5,k);
+        up(1,k) = pid_gains(4)*error(5,k);                                  % correct path heading to within achieved heading
+        up(2,k) = -pid_gains(4)*error(5,k);
+        up(3,k) = -pid_gains(4)*error(5,k);
+        up(4,k) = pid_gains(4)*error(5,k);
         % Integral gain
         if k > 1
             int(1,k) = int(1,k-1)+error(1,k)*time_params(1);                % increment x position goal error integrator
@@ -205,25 +198,25 @@ function [u,up,ui,ud,error,int] = calculate_gains(k,time_params,pid_gains,u,up,u
             int(7,k) = int(7,k-1)+error(7,k)*time_params(1);                % increment sway velocity max speed error integrator
             int(8,k) = int(8,k-1)+error(8,k)*time_params(1);                % increment surge velocity stop error integrator
             int(9,k) = int(9,k-1)+error(9,k)*time_params(1);                % increment sway velocity stop error integrator
-            ui(1,k) = pid_gains(2)*(int(5,k));
-            ui(2,k) = -pid_gains(2)*(int(5,k));
-            ui(3,k) = -pid_gains(2)*(int(5,k));
-            ui(4,k) = pid_gains(2)*(int(5,k));
+            ui(1,k) = pid_gains(5)*(int(5,k));
+            ui(2,k) = -pid_gains(5)*(int(5,k));
+            ui(3,k) = -pid_gains(5)*(int(5,k));
+            ui(4,k) = pid_gains(5)*(int(5,k));
         end
         % Derivative gain
         if k > 1
-            ud(1,k) = pid_gains(3)*((error(5,k)-error(5,k-1))/time_params(1));
-            ud(2,k) = -pid_gains(3)*((error(5,k)-error(5,k-1))/time_params(1));
-            ud(3,k) = -pid_gains(3)*((error(5,k)-error(5,k-1))/time_params(1));
-            ud(4,k) = pid_gains(3)*((error(5,k)-error(5,k-1))/time_params(1));
+            ud(1,k) = pid_gains(6)*((error(5,k)-error(5,k-1))/time_params(1));
+            ud(2,k) = -pid_gains(6)*((error(5,k)-error(5,k-1))/time_params(1));
+            ud(3,k) = -pid_gains(6)*((error(5,k)-error(5,k-1))/time_params(1));
+            ud(4,k) = pid_gains(6)*((error(5,k)-error(5,k-1))/time_params(1));
         end
         limit_mode = 2;
     elseif behavior(1,k) == 2
         % Proportional gain
-        up(1,k) = pid_gains(4)*error(6,k)-pid_gains(4)*error(7,k);
-        up(2,k) = pid_gains(4)*error(6,k)+pid_gains(4)*error(7,k);
-        up(3,k) = pid_gains(4)*error(6,k)-pid_gains(4)*error(7,k);
-        up(4,k) = pid_gains(4)*error(6,k)+pid_gains(4)*error(7,k);
+        up(1,k) = pid_gains(1)*error(1,k)-pid_gains(1)*error(2,k);
+        up(2,k) = pid_gains(1)*error(1,k)+pid_gains(1)*error(2,k);
+        up(3,k) = pid_gains(1)*error(1,k)-pid_gains(1)*error(2,k);
+        up(4,k) = pid_gains(1)*error(1,k)+pid_gains(1)*error(2,k);
         % Integral gain
         if k > 1
             int(1,k) = int(1,k-1)+error(1,k)*time_params(1);                % increment x position goal error integrator
@@ -235,21 +228,21 @@ function [u,up,ui,ud,error,int] = calculate_gains(k,time_params,pid_gains,u,up,u
             int(7,k) = int(7,k-1)+error(7,k)*time_params(1);                % increment sway velocity max speed error integrator
             int(8,k) = int(8,k-1)+error(8,k)*time_params(1);                % increment surge velocity stop error integrator
             int(9,k) = int(9,k-1)+error(9,k)*time_params(1);                % increment sway velocity stop error integrator
-            ui(1,k) = pid_gains(5)*(int(6,k))-pid_gains(5)*(int(7,k));
-            ui(2,k) = pid_gains(5)*(int(6,k))+pid_gains(5)*(int(7,k));
-            ui(3,k) = pid_gains(5)*(int(6,k))-pid_gains(5)*(int(7,k));
-            ui(4,k) = pid_gains(5)*(int(6,k))+pid_gains(5)*(int(7,k));
+            ui(1,k) = pid_gains(2)*(int(1,k))-pid_gains(2)*(int(2,k));
+            ui(2,k) = pid_gains(2)*(int(1,k))+pid_gains(2)*(int(2,k));
+            ui(3,k) = pid_gains(2)*(int(1,k))-pid_gains(2)*(int(2,k));
+            ui(4,k) = pid_gains(2)*(int(1,k))+pid_gains(2)*(int(2,k));
         end
         % Derivative gain
         if k > 1
-            ud(1,k) = pid_gains(6)*((error(6,k)-error(6,k-1))/time_params(1))-...
-                pid_gains(6)*((error(7,k)-error(7,k-1))/time_params(1));
-            ud(2,k) = pid_gains(6)*((error(6,k)-error(6,k-1))/time_params(1))+...
-                pid_gains(6)*((error(7,k)-error(7,k-1))/time_params(1));
-            ud(3,k) = pid_gains(6)*((error(6,k)-error(6,k-1))/time_params(1))-...
-                pid_gains(6)*((error(7,k)-error(7,k-1))/time_params(1));
-            ud(4,k) = pid_gains(6)*((error(6,k)-error(6,k-1))/time_params(1))+...
-                pid_gains(6)*((error(7,k)-error(7,k-1))/time_params(1));
+            ud(1,k) = pid_gains(3)*((error(1,k)-error(1,k-1))/time_params(1))-...
+                pid_gains(3)*((error(2,k)-error(2,k-1))/time_params(1));
+            ud(2,k) = pid_gains(3)*((error(1,k)-error(1,k-1))/time_params(1))+...
+                pid_gains(3)*((error(2,k)-error(2,k-1))/time_params(1));
+            ud(3,k) = pid_gains(3)*((error(1,k)-error(1,k-1))/time_params(1))-...
+                pid_gains(3)*((error(2,k)-error(2,k-1))/time_params(1));
+            ud(4,k) = pid_gains(3)*((error(1,k)-error(1,k-1))/time_params(1))+...
+                pid_gains(3)*((error(2,k)-error(2,k-1))/time_params(1));
         end
         limit_mode = 1;
     elseif behavior(1,k) == 3
@@ -326,26 +319,7 @@ function [u,up,ui,ud,error,int] = calculate_gains(k,time_params,pid_gains,u,up,u
     
     % Limit thrust control effort
     u = limit_thrust(u,k,limit_mode);
-    
-    % Convert thrust to motor controller duty cycle
-    u = thrust2dutycycle(u);
         
-end
-
-function publish_motor_commands(u,MC,k,m_pub,m_msg)
-
-    % Convert thrust to motor controller duty cycle
-    MC(1,k) = u(1,k).*(100/55);
-    MC(2,k) = u(2,k).*(100/55);
-    MC(3,k) = u(3,k).*(100/60);
-    MC(4,k) = u(4,k).*(100/60);
-    
-    % Publish to ROS
-    send(m_pub(1),m_msg(1));
-    send(m_pub(2),m_msg(2));
-    send(m_pub(3),m_msg(3));
-    send(m_pub(4),m_msg(4));
-    
 end
 
 function u = limit_thrust(u,k,limit_mode)

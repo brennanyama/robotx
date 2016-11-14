@@ -5,7 +5,7 @@
 % ROS
 clear
 clc
-rosinit
+%rosinit
  
 % Subscribers
 OGridSub = rossubscriber('/map', 'nav_msgs/OccupancyGrid');
@@ -40,7 +40,7 @@ objAngle = theta-phi;
 if objAngle>360
      objAngle-360;
 end
-angleError = 7;                                         % Guessed angle error, +/-
+angleError = 8;                                         % Guessed angle error, +/-
 
 
 % We now have the x and y location in ogrid, the ogrid, the current
@@ -51,28 +51,45 @@ xRay = currentX;
 yRay = currentY;
 xEst = currentX;
 yEst = currentY;
-angle = objAngle;
-xObj = 6969;
+xObj = 6969;                % IF this remains as 6969, then we did not find a valid object.
 yObj = 6969;
 occupied = 0;
 
-while 1
-    for dist = 1:50                             % Only checks up to 5m away
-        
-        xRay = xRay + 0.1 * cosd(angle);
-        yRay = yRay + 0.1 * sind(angle);
-        xEst = roundn(xRay, -1);                % The next point in the OGrid along ray
-        yEst = roundn(yRay, -1);
+% These array arrayMix is an array that will search cental out.
+arrayL = [objAngle:0.5:objAngle+angleError];
+arrayR = [objAngle-0.5:-0.5:objAngle-angleError];
+arrayMix(1:2:length(arrayL)*2) = arrayL;
+arrayMix(2:2:length(arrayR)*2) = arrayR;
 
-        occupied = getOccupancy(map, [xEst, yEst]);
-        if occupied                             % If occupied, return and break loop.
-            xObj = xEst;
-            yObj = yEst;
-            break
+% We now find the most likely object along our angle for the object. If we
+% do not find any along the most likely line, we search from middle out to
+% error.
+
+
+while 1
+    for element = 1:length(arrayMix)
+        
+        for dist = 1:50                             % Only checks up to 5m away
+
+            xRay = xRay + 0.1 * cosd(arrayMix(element));
+            yRay = yRay + 0.1 * sind(arrayMix(element));
+            xEst = roundn(xRay, -1);                % The next point in the OGrid along ray
+            yEst = roundn(yRay, -1);
+
+            occupied = getOccupancy(map, [xEst, yEst]);
+            if occupied                             % If occupied, return and break loop.
+                
+                xObj = xEst;
+                yObj = yEst;
+                objLocation = [xObj, yObj];
+                break;
+            end
+            if occupied
+                occupied = 0;
+                break;
+            end
         end
-    end
-    if occupied                                 % breaks while loop if condition is met
-        break
+        % break?
     end
     % TODO: Add error increments, possibly use Nathan's code to get all
     % points in the cone of possible objects.
