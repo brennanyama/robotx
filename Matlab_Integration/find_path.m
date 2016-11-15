@@ -1,4 +1,4 @@
-function [optimalPathX, optimalPathY, psi_goal] = find_path(currX, currY, goalX, goalY, map)
+function [optimalPathX, optimalPathY] = find_path(currX, currY, goalX, goalY, map)
 % Written by Kelan Ige & Paulo Lemus
 % RobotX Maritime Path Planning
 % Requires: Robotics Matlab Toolbox by Peter Corke
@@ -17,11 +17,4 @@ function [optimalPathX, optimalPathY, psi_goal] = find_path(currX, currY, goalX,
     % Publish path information
     optimalPathX = spath(:, 1);
     optimalPathY = spath(:, 2);
-    
-    % Angle Calculation
-    L = length(optimalPathX);
-    if(L > 1)
-        psi_goal = angle((optimalPathY(L)-optimalPathY(L-1))/(optimalPathX(L)-optimalPathX(L-1)));
-    else
-        psi_goal = 0;
 end

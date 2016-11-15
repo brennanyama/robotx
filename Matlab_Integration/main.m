@@ -36,6 +36,8 @@ tic;                % Begin timer, used by motion controller
 k = 1;
 event_map = zeros([1024, 1024]);    % Map used to record events
 event_flag = false;                 % Set to true when a new event is detected
+wayX = [];                          % Waypoint X coordinates
+wayY = [];                          % Waypoint Y coordinates
 
 while (1)           % Main loop, condition should be changed to ROS is running
     % Receivers
@@ -59,18 +61,29 @@ disp(toc);
     map = readBinaryOccupancyGrid(OGridData);       % Binar occupancy grid
     
     % Event Handler
-%    [xObj, yObj] = event_location(currentX, currentY, rotationZ, phi, map);
-%    event_map(xObj, yObj) = CameraColorData;           % Update event map
+    [xObj, yObj] = event_location(currentX, currentY, rotationZ, phi, map);
+    event_map(xObj, yObj) = CameraColorData;           % Update event map
     event_flag = true;
 
     % Wapoint Descision Logic - sets goalX and goalY coordinates
     if (event_flag)
         [destX, destY] = mission_plan(event_map, currentX, currentY);
+        wayX = [destX];                    % Create a new set of waypoints from mission planner
+        wayY = [destY];                    % 
     end
     
     % Shortest Path using D*
-    if (length(destX) > 0)
-        goal_vars = find_path(currentX, currentY, destX(1), destY(1), map);
+    if (and((length(wayX) > 0), (length(pathX) == 0)))          % Arrived at the end of the path and need to process next waypoint
+        [pathX, pathY] = find_path(currentX, currentY, wayX(1), wayY(1), map);
+        wayX(1) = [];                   % Remove the first waypoint
+        wayY(1) = [];                   % Remove the first waypoint
+    elseif (length(pathX) > 0)                                  % Still have to get to the end of the path
+        psi = end_angle(pathX, pathY, rotationZ);  % Arrive at the point and face the direction of the next point
+        goal_vars = [pathX(1), pathY(1), psi];            % Set the current coordinates as the waypoint with psi = 0
+        pathX(1) = [];                          % Finished processing the first X coordinate, so remove it
+        pathY(1) = [];                          % Finished processing the first Y coordinate, so remove it
+    else                % No waypoints or paths
+        goal_vars = [currentX, currentY, 0];    % Hold position and heading
     end
     
     % Motion Controller
