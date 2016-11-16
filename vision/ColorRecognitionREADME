@@ -1,0 +1,22 @@
+Color Recognition
+
+Setup: 
+Must have MATLAB and Computer Vision System Toolbox installed
+
+Troubleshooting: 
+If problems with the webcam arise, first check that MATLAB can "see" the webcam
+        Type 'webcamlist' into the command window and a list of the available webcams should appear
+        Ensure that the code is referring to the correct webcam if more than one is listed
+                Ex: If the results of the 'webcamlist' show that the 'HD Logitech C920 Pro' is the second webcam listed, 
+                ensure that the code references ('linuxvideo',2)
+
+Codes: 
+HSVNov15RedOnlyMorph.m
+        Color(s): Red 
+        Input(s): Live-stream video from the webcam
+        Output(s): areaRed, centroidRed, bboxRed
+                The outputs are determined using Blob Analysis in MATLAB: https://www.mathworks.com/help/vision/ref/blobanalysis.html 
+                        areaRed: Vector that the number of pixels in labeled regions of red
+                        centroidRed: M-by-2 matrix of centroid coordinates, where M represents the number of red blobs
+                        bboxRed: M-by-4 matrix of [x y width height] red bounding box coordinates, where M represents the number
+                                of red blobs and [x y] represents the upper left corner of the bounding box
