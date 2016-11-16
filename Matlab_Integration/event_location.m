@@ -57,7 +57,11 @@ function [xObj, yObj] = event_location(currX, currY, rotZ, phi, map)
                 xEst = roundn(xRay, -1);                % The next point in the OGrid along ray
                 yEst = roundn(yRay, -1);
                 
-                occupied = getOccupancy(map, [xEst, yEst]);
+                if(((xEst < 51.15) & (xEst > -51.25)) & ((yEst > -51.25) & (yEst < 51.15)))     % Check to see if the estimate is inside the map
+                    occupied = getOccupancy(map, [xEst, yEst]);
+                else
+                    found = true;                       % No object found inside the search ray
+                end
                 if (occupied)                             % If occupied, return and break loop.
                     xObj = xEst;
                     yObj = yEst;

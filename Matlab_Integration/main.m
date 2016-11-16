@@ -1,4 +1,12 @@
-% Mission Planner
+% Matlab Integration
+% University of Hawaii at Manoa
+% Fall 2016
+% Maritime RobotX
+% Author: Kelan Ige
+
+% Define Constants
+RED = 1;
+GREEN = 2;
 
 % Subscriptions
     % Mission Planner
@@ -32,13 +40,15 @@
         m_msg = [mQ1_msg,mQ2_msg,mQ3_msg,mQ4_msg];
 
 % Initialize variables
-tic;                % Begin timer, used by motion controller
 k = 1;
 event_map = zeros([1024, 1024]);    % Map used to record events
 event_flag = false;                 % Set to true when a new event is detected
 wayX = [];                          % Waypoint X coordinates
 wayY = [];                          % Waypoint Y coordinates
+pathX = [];
+pathY = [];
 
+tic;                % Begin timer, used by motion controller
 while (1)           % Main loop, condition should be changed to ROS is running
     % Receivers
     OGridData = receive(OGridSub);              % receive message from /map topic
@@ -62,30 +72,48 @@ disp(toc);
     
     % Event Handler
     [xObj, yObj] = event_location(currentX, currentY, rotationZ, phi, map);
-    event_map(xObj, yObj) = CameraColorData;           % Update event map
-    event_flag = true;
+    
+    if (~(isequal(xObj, 6969) | isequal(yObj, 6969)))
+        [xIn, yIn] = oCo2mIn(xObj, yObj);
+        event_map(xIn, yIn) = RED;  % CameraColorData;           % Update event map
+        event_flag = true;
+        disp('Event Found: ');
+        disp(xObj); disp(yObj);
+    else
+        event_flag = false;
+    end
 
     % Wapoint Descision Logic - sets goalX and goalY coordinates
-    if (event_flag)
+    if (event_flag | isequal(length(wayX),0))
         [destX, destY] = mission_plan(event_map, currentX, currentY);
         wayX = [destX];                    % Create a new set of waypoints from mission planner
         wayY = [destY];                    % 
+        disp('New set of waypoints: ');
+        disp(wayX); disp(wayY);
     end
     
-    % Shortest Path using D*
-    if (and((length(wayX) > 0), (length(pathX) == 0)))          % Arrived at the end of the path and need to process next waypoint
-        [pathX, pathY] = find_path(currentX, currentY, wayX(1), wayY(1), map);
-        wayX(1) = [];                   % Remove the first waypoint
-        wayY(1) = [];                   % Remove the first waypoint
-    elseif (length(pathX) > 0)                                  % Still have to get to the end of the path
-        psi = end_angle(pathX, pathY, rotationZ);  % Arrive at the point and face the direction of the next point
-        goal_vars = [pathX(1), pathY(1), psi];            % Set the current coordinates as the waypoint with psi = 0
-        pathX(1) = [];                          % Finished processing the first X coordinate, so remove it
-        pathY(1) = [];                          % Finished processing the first Y coordinate, so remove it
-    else                % No waypoints or paths
-        goal_vars = [currentX, currentY, 0];    % Hold position and heading
-    end
+%     % Shortest Path using D*
+%     if (and((length(wayX) > 0), (length(pathX) == 0)))          % Arrived at the end of the path and need to process next waypoint
+%         [xOg, yOg] = mIn2oCo(wayX(1), wayY(1));
+%         xStart = round(currentX, 2);
+%         yStart = round(currentY, 2);
+%         [pathX, pathY] = find_path(currentX, currentY, xOg, yOg, map);
+%         disp('Waypoint sent to path planner: ');
+%         disp(wayX(1)); disp(wayY(1));
+%         wayX(1) = [];                   % Remove the first waypoint
+%         wayY(1) = [];                   % Remove the first waypoint
+%     elseif (length(pathX) > 0)                                  % Still have to get to the end of the path
+%         psi = end_angle(pathX, pathY, rotationZ);  % Arrive at the point and face the direction of the next point
+%         goal_vars = [pathX(1), pathY(1), psi];            % Set the current coordinates as the waypoint with psi = 0
+%         disp('Coordinate sent to Motion Controller: ');
+%         disp(pathX(1)); disp(pathY(1));
+%         pathX(1) = [];                          % Finished processing the first X coordinate, so remove it
+%         pathY(1) = [];                          % Finished processing the first Y coordinate, so remove it
+%     else                % No waypoints or paths
+%         goal_vars = [currentX, currentY, 0];    % Hold position and heading
+%     end
     
+    goal_vars = [wayX(1), wayY(1), 0];
     % Motion Controller
     [time_params,lumped_params,geometry_params,pid_gains,control_tolerances,control_maximums,x,u,up,ui,ud,MC,error,int,behavior] = sim_setup();
     
@@ -101,8 +129,8 @@ disp(toc);
         % Publish motor command
         publish_motor_commands(u,MC,k,m_pub,m_msg);
         
-        % Simulate Plant
-        x = plant(k,time_params,x,u,lumped_params,geometry_params);
+%         % Simulate Plant
+%         x = plant(k,time_params,x,u,lumped_params,geometry_params);
         
         % Update Loop Variables
         k = int32(mod((k+1), 50000));
