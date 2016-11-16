@@ -6,6 +6,11 @@ function publish_motor_commands(u,MC,k,m_pub,m_msg)
     MC(3,k) = u(3,k).*(100/60);
     MC(4,k) = u(4,k).*(100/60);
     
+    m_msg(1).Data = round(MC(1, k), -1);
+    m_msg(2).Data = round(MC(2, k), -1);
+    m_msg(3).Data = round(MC(3, k), -1);
+    m_msg(4).Data = round(MC(4, k), -1);
+    
     % Publish to ROS
     send(m_pub(1),m_msg(1));
     send(m_pub(2),m_msg(2));

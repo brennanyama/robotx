@@ -24,7 +24,8 @@ GREEN = 2;
         mQ2_pub = rospublisher('/motor_q2', 'std_msgs/UInt8');   % create Matlab publisher to Q2 Arduino
         mQ3_pub = rospublisher('/motor_q3', 'std_msgs/UInt8');   % create Matlab publisher to Q3 Arduino
         mQ4_pub = rospublisher('/motor_q4', 'std_msgs/UInt8');   % create Matlab publisher to Q4 Arduino
-
+    % Loggint
+        log_pub = rospublisher('/rosout', 'rosgraph_msgs/Log');   % create a publisher for logging system message
 
 % Messages
     % Mission Planner
@@ -38,7 +39,42 @@ GREEN = 2;
         % Output array
         m_pub = [mQ1_pub,mQ2_pub,mQ3_pub,mQ4_pub];
         m_msg = [mQ1_msg,mQ2_msg,mQ3_msg,mQ4_msg];
+    % Logging
+        log_msg = rosmessage(log_pub);
 
+% Initialize Color Recognition
+    % Acquire input video stream
+    vidDevice = imaq.VideoDevice('linuxvideo',1); 
+
+    % Set VideoFormat property
+    vidDevice.VideoFormat = 'RGB24_640x480';
+
+    % Acquire input video property
+    vidInfo = imaqhwinfo(vidDevice); 
+    
+    % Create structural element for morphological operations to remove
+    % disturbances
+    rectangleElem = strel('rectangle',[4 1]);
+
+    % Create a BlobAnalysis object to calculate detected objects' area,
+    % centroid, and bounding box
+    hblob = vision.BlobAnalysis('AreaOutputPort', true, ... 
+    'CentroidOutputPort', true, ...
+    'BoundingBoxOutputPort', true', ...
+    'MinimumBlobArea', 200, ...
+    'MaximumBlobArea', 5000);
+
+    % Set Red box handling
+    hshapeinsRedBox = vision.ShapeInserter('BorderColor', 'Custom', ... 
+    'CustomBorderColor', [1 0 0], ...
+    'Fill', true, ...
+    'FillColor', 'Custom', ...
+    'CustomFillColor', [1 0 0], ...
+    'Opacity', 0.4);
+
+    % Output video player
+    hVideoIn = vision.VideoPlayer;
+    
 % Initialize variables
 k = 1;
 event_map = zeros([1024, 1024]);    % Map used to record events
@@ -53,22 +89,20 @@ while (1)           % Main loop, condition should be changed to ROS is running
     % Receivers
     OGridData = receive(OGridSub);              % receive message from /map topic
     PoseData = receive(PoseSub);                % receive message from /poseupdate topic
-
-%    CameraHeadData = receive(CameraHeadSub);    % receive message from /cameraHead topic
-%    CameraColorData = receive(CameraColorSub);  % receive message from
-%    /cameraColor topic
-disp('Messages Received');
-disp(toc);
+log_msg.msg = 'Messages Received';
+send(log_pub, log_msg);
+log_msg.msg = num2str(toc);
+send(log_pub, log_msg);
     % Extract relevant data from ROS messages
     currentX = PoseData.Pose.Pose.Position.X;   % current X position SLAM estimate
     currentY = PoseData.Pose.Pose.Position.Y;   % current Y position SLAM estimate
     rotationZ = PoseData.Pose.Pose.Orientation.Z;   % current heading orientation
     map = convO2M(OGridData, [currentX, currentY]);
-
-%    phi = CameraHeadData;                       % angle of a detected color
-    phi = 30;
     
     map = readBinaryOccupancyGrid(OGridData);       % Binar occupancy grid
+    
+    % Color Recognition
+    [centroid, psi] = color_recognition(vidDevice);
     
     % Event Handler
     [xObj, yObj] = event_location(currentX, currentY, rotationZ, phi, map);
@@ -77,6 +111,8 @@ disp(toc);
         [xIn, yIn] = oCo2mIn(xObj, yObj);
         event_map(xIn, yIn) = RED;  % CameraColorData;           % Update event map
         event_flag = true;
+        log_msg.msg = 'Event Found!';
+        send(log_pub, log_msg);
         disp('Event Found: ');
         disp(xObj); disp(yObj);
     else
@@ -90,28 +126,30 @@ disp(toc);
         wayY = [destY];                    % 
         disp('New set of waypoints: ');
         disp(wayX); disp(wayY);
+        log_msg.msg = 'New set of Waypoints.';
+        send(log_pub, log_msg);
     end
     
-%     % Shortest Path using D*
-%     if (and((length(wayX) > 0), (length(pathX) == 0)))          % Arrived at the end of the path and need to process next waypoint
-%         [xOg, yOg] = mIn2oCo(wayX(1), wayY(1));
-%         xStart = round(currentX, 2);
-%         yStart = round(currentY, 2);
-%         [pathX, pathY] = find_path(currentX, currentY, xOg, yOg, map);
-%         disp('Waypoint sent to path planner: ');
-%         disp(wayX(1)); disp(wayY(1));
-%         wayX(1) = [];                   % Remove the first waypoint
-%         wayY(1) = [];                   % Remove the first waypoint
-%     elseif (length(pathX) > 0)                                  % Still have to get to the end of the path
-%         psi = end_angle(pathX, pathY, rotationZ);  % Arrive at the point and face the direction of the next point
-%         goal_vars = [pathX(1), pathY(1), psi];            % Set the current coordinates as the waypoint with psi = 0
-%         disp('Coordinate sent to Motion Controller: ');
-%         disp(pathX(1)); disp(pathY(1));
-%         pathX(1) = [];                          % Finished processing the first X coordinate, so remove it
-%         pathY(1) = [];                          % Finished processing the first Y coordinate, so remove it
-%     else                % No waypoints or paths
-%         goal_vars = [currentX, currentY, 0];    % Hold position and heading
-%     end
+    % Shortest Path using D*
+    if (and((length(wayX) > 0), (length(pathX) == 0)))          % Arrived at the end of the path and need to process next waypoint
+        [xOg, yOg] = mIn2oCo(wayX(1), wayY(1));
+        xStart = round(currentX, 2);
+        yStart = round(currentY, 2);
+        [pathX, pathY] = find_path(currentX, currentY, xOg, yOg, map);
+        disp('Waypoint sent to path planner: ');
+        disp(wayX(1)); disp(wayY(1));
+        wayX(1) = [];                   % Remove the first waypoint
+        wayY(1) = [];                   % Remove the first waypoint
+    elseif (length(pathX) > 0)                                  % Still have to get to the end of the path
+        psi = end_angle(pathX, pathY, rotationZ);  % Arrive at the point and face the direction of the next point
+        goal_vars = [pathX(1), pathY(1), psi];            % Set the current coordinates as the waypoint with psi = 0
+        disp('Coordinate sent to Motion Controller: ');
+        disp(pathX(1)); disp(pathY(1));
+        pathX(1) = [];                          % Finished processing the first X coordinate, so remove it
+        pathY(1) = [];                          % Finished processing the first Y coordinate, so remove it
+    else                % No waypoints or paths
+        goal_vars = [currentX, currentY, 0];    % Hold position and heading
+    end
     
     goal_vars = [wayX(1), wayY(1), 0];
     % Motion Controller
@@ -136,3 +174,7 @@ disp(toc);
         k = int32(mod((k+1), 50000));
     
 end
+
+% Release all memory and buffer used
+release(hVideoIn); 
+release(vidDevice);
