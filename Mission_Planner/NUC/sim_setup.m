@@ -74,5 +74,5 @@ function [time_params,lumped_params,geometry_params,pid_gains,control_tolerances
     MC = zeros(4,N);            % motor command matrix [%]
     error = zeros(9,N);         % control variable error
     int = zeros(9,N);           % control variable integrator
-    behavior = zeros(1,N);      % behavior tracking matrix       
+    behavior = ones(1,N);      % behavior tracking matrix       
 end

@@ -7,6 +7,7 @@ function [u,up,ui,ud,error,int] = calculate_gains(k,time_params,pid_gains,u,up,u
     % 4: control robot heading to goal heading within GHT
 
     if behavior(1,k) == 1
+        limit_mode = 2;
         % Proportional gain
         up(1,k) = pid_gains(1)*error(5,k);                                  % correct path heading to within achieved heading
         up(2,k) = -pid_gains(1)*error(5,k);
@@ -35,8 +36,8 @@ function [u,up,ui,ud,error,int] = calculate_gains(k,time_params,pid_gains,u,up,u
             ud(3,k) = -pid_gains(3)*((error(5,k)-error(5,k-1))/time_params(1));
             ud(4,k) = pid_gains(3)*((error(5,k)-error(5,k-1))/time_params(1));
         end
-        limit_mode = 2;
     elseif behavior(1,k) == 2
+        limit_mode = 1;
         % Proportional gain
         up(1,k) = pid_gains(4)*error(6,k)-pid_gains(4)*error(7,k);
         up(2,k) = pid_gains(4)*error(6,k)+pid_gains(4)*error(7,k);
@@ -69,8 +70,8 @@ function [u,up,ui,ud,error,int] = calculate_gains(k,time_params,pid_gains,u,up,u
             ud(4,k) = pid_gains(6)*((error(6,k)-error(6,k-1))/time_params(1))+...
                 pid_gains(6)*((error(7,k)-error(7,k-1))/time_params(1));
         end
-        limit_mode = 1;
     elseif behavior(1,k) == 3
+        limit_mode = 1;
         % Proportional gain
         up(1,k) = -pid_gains(4)*error(8,k)+pid_gains(4)*error(9,k);
         up(2,k) = -pid_gains(4)*error(8,k)-pid_gains(4)*error(9,k);
@@ -103,8 +104,8 @@ function [u,up,ui,ud,error,int] = calculate_gains(k,time_params,pid_gains,u,up,u
             ud(4,k) = -pid_gains(6)*((error(8,k)-error(8,k-1))/time_params(1))-...
                 pid_gains(6)*((error(9,k)-error(9,k-1))/time_params(1));
         end
-        limit_mode = 1;
-    elseif behavior == 4
+    elseif behavior(1, k) == 4
+        limit_mode = 2;
         % Proportional gain
         up(1,k) = pid_gains(1)*error(3,k);                                  % correct path heading to within achieved heading
         up(2,k) = -pid_gains(1)*error(3,k);
@@ -133,7 +134,6 @@ function [u,up,ui,ud,error,int] = calculate_gains(k,time_params,pid_gains,u,up,u
             ud(3,k) = -pid_gains(3)*((error(3,k)-error(3,k-1))/time_params(1));
             ud(4,k) = pid_gains(3)*((error(3,k)-error(3,k-1))/time_params(1));
         end
-        limit_mode = 2;
     end
     
     % Total gain vector

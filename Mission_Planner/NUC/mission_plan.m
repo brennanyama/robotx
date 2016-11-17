@@ -28,7 +28,8 @@ function [destX, destY] = mission_plan(event_map, currX, currY)
         disp('Known Red Buoys: '); disp(red_num);
         disp('Known Green Buoys: '); disp(green_num);
         
-        destX = red_locX(1); destY = red_locY(1);
+        destX = round(currX) + 50; destY = round(currY);
+        %destX = red_locX(1); destY = red_locY(1);
         
 %         if (xor((red_num == 1), (green_num == 1)))
 %             if (red_num == 1)
