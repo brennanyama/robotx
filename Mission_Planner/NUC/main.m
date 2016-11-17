@@ -63,7 +63,7 @@ pathX = [];
 pathY = [];
 
 tic;                % Begin timer, used by motion controller
-while (1)           % Main loop, condition should be changed to ROS is running
+% while (1)           % Main loop, condition should be changed to ROS is running
     % Receivers
     OGridData = receive(OGridSub);              % receive message from /map topic
     PoseData = receive(PoseSub);                % receive message from /poseupdate topic
@@ -80,7 +80,7 @@ while (1)           % Main loop, condition should be changed to ROS is running
     
     matrixOGrid = convB2M(binaryMap);                     % Matrix map DSTAR
     currentPos = convP2M(currentX, currentY, binaryMap);  % Converts current Pos from ros to matrix form
-    
+    while (1)
     % Color Recognition
     disp('Starting color recognition.');
     disp(toc);
