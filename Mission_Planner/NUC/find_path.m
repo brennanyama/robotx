@@ -1,9 +1,8 @@
-function [optimalPathX, optimalPathY] = find_path(currX, currY, goalX, goalY, map)
+function [optimalPathX, optimalPathY] = find_path(currPos, goalX, goalY, map)
 % Written by Kelan Ige & Paulo Lemus
 % RobotX Maritime Path Planning
 % Requires: Robotics Matlab Toolbox by Peter Corke
 % found here: http://www.petercorke.com/RTB/dl-zip.php?file=current/robot-9.10.zip
-    currPos = [currX, currY];
     
 
     % Create a D* Object using the map

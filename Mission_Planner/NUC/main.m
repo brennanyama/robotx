@@ -14,8 +14,6 @@ GREEN = 2;
         PoseSub = rossubscriber('/poseupdate', 'geometry_msgs/PoseWithCovarianceStamped');  %Orientation of WAM-V from LiDAR 
         CameraHeadSub = rossubscriber('/cameraHead', 'geometry_msgs/Pose');     %Orientation of WAM-V from camera
         CameraColorSub = rossubscriber('/cameraColor', 'std_msgs/UInt8');       %Color from camera
-        
-    % Path Planner
         GPSSub = rossubscriber('/GPSLocation', 'sensor_msgs/NavSatFix');
         
 % Publications
@@ -74,26 +72,29 @@ while (1)           % Main loop, condition should be changed to ROS is running
     disp(toc);
 %send(log_pub, log_msg);
     % Extract relevant data from ROS messages
-    currentX = PoseData.Pose.Pose.Position.X;   % current X position SLAM estimate
-    currentY = PoseData.Pose.Pose.Position.Y;   % current Y position SLAM estimate
-    rotationZ = PoseData.Pose.Pose.Orientation.Z;   % current heading orientation
-    [map, currentPos] = convO2M(OGridData, [roundn(currentX, -1), roundn(currentY, -1)]);
+    currentX = PoseData.Pose.Pose.Position.X;   % current X position SLAM estimate ROS
+    currentY = PoseData.Pose.Pose.Position.Y;   % current Y position SLAM estimate ROS
+    rotationZ = PoseData.Pose.Pose.Orientation.Z;   % current heading orientation ROS
+    binaryMap = readBinaryOccupancyGrid(OGridData);       % Binary occupancy grid MATLAB
+    inflate(binaryMap, 0.02);
     
-    map_event = readBinaryOccupancyGrid(OGridData);       % Binar occupancy grid
+    matrixOGrid = convB2M(binaryMap);                     % Matrix map DSTAR
+    currentPos = convP2M(currentX, currentY, binaryMap);  % Converts current Pos from ros to matrix form
     
     % Color Recognition
     disp('Starting color recognition.');
     disp(toc);
-    [centroid, psi] = color_recognition(vidDevice);
+    [centroid, phi] = color_recognition(vidDevice);
     
     % Event Handler
     disp('Starting event handler.');
     disp(toc);
-    [xObj, yObj] = event_location(currentX, currentY, rotationZ, psi, map_event);
+    [xObj, yObj] = event_location(currentX, currentY, rotationZ, phi, binaryMap);
     
-    if (~(isequal(xObj, 6969) | isequal(yObj, 6969)))
-        [xIn, yIn] = oCo2mIn(xObj, yObj);
-        event_map(xIn, yIn) = RED;  % CameraColorData;           % Update event map
+    if (~(isequal(xObj, 6969) || isequal(yObj, 6969)))
+        
+        xyIn = convP2M(xObj, yObj, binaryMap);
+        event_map(xyIn(1), xyIn(2)) = RED;  % CameraColorData;           % Update event map
         event_flag = true;
 %        log_msg.msg = 'Event Found!';
 %        send(log_pub, log_msg);
@@ -106,7 +107,7 @@ while (1)           % Main loop, condition should be changed to ROS is running
     % Wapoint Descision Logic - sets goalX and goalY coordinates
     disp('Starting Mission Planner.');
     disp(toc);
-    if (event_flag | isequal(length(wayX),0))
+    if (event_flag || isequal(length(wayX),0))
         [destX, destY] = mission_plan(event_map, currentX, currentY);
         wayX = [destX];                    % Create a new set of waypoints from mission planner
         wayY = [destY];                    % 
@@ -119,17 +120,16 @@ while (1)           % Main loop, condition should be changed to ROS is running
     % Shortest Path using D*
     disp('Starting path planning.');
     if (and((length(wayX) > 0), (length(pathX) == 0)))          % Arrived at the end of the path and need to process next waypoint
-        [xOg, yOg] = coo2M(map_event.XWorldLimits, map_event.YWorldLimits, map_event.Resolution, wayX(1), wayY(1));
-        xOg = round(xOg);
-        yOg = round(yOg);
-        xStart = round(currentX, 2);
-        yStart = round(currentY, 2);
-        [pathX, pathY] = find_path(currentPos(1), currentPos(2), 700, 700, map);
+        
+        [xOg, yOg] = convP2M(wayX(1), wayY(1), binaryMap);
+        
+        [pathX, pathY] = find_path(currentPos, xOg, yOg, matrixOGrid);
         disp('Waypoint sent to path planner: ');
         disp(wayX(1)); disp(wayY(1));
         wayX(1) = [];                   % Remove the first waypoint
         wayY(1) = [];                   % Remove the first waypoint
-    elseif (length(pathX) > 0)                                  % Still have to get to the end of the path
+        
+    elseif (~isempty(pathX))     %(length(pathX) > 0)                                  % Still have to get to the end of the path
         psi = end_angle(pathX, pathY, rotationZ);  % Arrive at the point and face the direction of the next point
         goal_vars = [pathX(1), pathY(1), psi];            % Set the current coordinates as the waypoint with psi = 0
         disp('Coordinate sent to Motion Controller: ');
