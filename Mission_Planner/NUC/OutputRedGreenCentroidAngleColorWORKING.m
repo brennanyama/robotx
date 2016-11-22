@@ -1,27 +1,42 @@
-function [centroid, angle, color] = color_recognition(vidDevice)
-    centroid = []; angle = []; color = [];
-    % Set blob analysis handling
-    hblob = vision.BlobAnalysis('AreaOutputPort', false, ...
-        'CentroidOutputPort', true, ...
-        'BoundingBoxOutputPort', true', ...
-        'MinimumBlobArea', 200, ...
-        'MaximumCount', 10);
-    
-    % Set Red box handling
-    hshapeinsRedBox = vision.ShapeInserter('BorderColor', 'Custom', ...
-        'CustomBorderColor', [1 0 0], ...
-        'Fill', true, ...
-        'FillColor', 'Custom', ...
-        'CustomFillColor', [1 0 0], ...
-        'Opacity', 0.4);
-    
-    % Set Green box handling
-    hshapeinsGreenBox = vision.ShapeInserter('BorderColor', 'Custom', ...
-        'CustomBorderColor', [0 1 0], ...
-        'Fill', true, ...
-        'FillColor', 'Custom', ...
-        'CustomFillColor', [0 1 0], ...
-        'Opacity', 0.4);
+%% Initialization
+
+% Acquire input video stream
+vidDevice = imaq.VideoDevice('linuxvideo');
+
+% Set VideoFormat property
+vidDevice.VideoFormat = 'RGB24_640x480';
+
+% Acquire input video property
+vidInfo = imaqhwinfo(vidDevice);
+
+% Set blob analysis handling
+hblob = vision.BlobAnalysis('AreaOutputPort', false, ...
+    'CentroidOutputPort', true, ...
+    'BoundingBoxOutputPort', true', ...
+    'MinimumBlobArea', 200, ...
+    'MaximumCount', 10);
+
+% Set Red box handling
+hshapeinsRedBox = vision.ShapeInserter('BorderColor', 'Custom', ...
+    'CustomBorderColor', [1 0 0], ...
+    'Fill', true, ...
+    'FillColor', 'Custom', ...
+    'CustomFillColor', [1 0 0], ...
+    'Opacity', 0.4);
+
+% Set Green box handling
+hshapeinsGreenBox = vision.ShapeInserter('BorderColor', 'Custom', ...
+    'CustomBorderColor', [0 1 0], ...
+    'Fill', true, ...
+    'FillColor', 'Custom', ...
+    'CustomFillColor', [0 1 0], ...
+    'Opacity', 0.4);
+
+% Output video player
+hVideoIn = vision.VideoPlayer;
+
+while 1                    %'while' processing
+    %% Processing
     
     % Acquire single frame
     rgbFrame = step(vidDevice);
@@ -78,7 +93,7 @@ function [centroid, angle, color] = color_recognition(vidDevice)
     % Output video stream
     step(hVideoIn, vidIn);
     
-    % Calculate Colors
+    %% To calculate a minium area to be regestered
     wr = bboxRed(:,3);           %to get width
     hr = bboxRed(:,4);           %to get height
     Ar = wr.*hr;                 %calculate area
@@ -86,7 +101,7 @@ function [centroid, angle, color] = color_recognition(vidDevice)
     hg = bboxGreen(:,4);
     Ag = wg.*hg;
     if Ar>2000
-        % To find Heading
+        %% To find Heading
         %get the x coord; expanding rows of coloumn 1
         xr = centroidRed(:,1);
         %get the y coord; expanding rows of coulumn 2
@@ -107,15 +122,12 @@ function [centroid, angle, color] = color_recognition(vidDevice)
         if xr>0                     %if xcoord of red exists 
             red=1;                  %assigining an integer to the color
         end
-        disp('Red:');                   %disp('1')
-        color = [color; red];
-        disp(centroidRed);           %disp('the centroid')
-        centroid = [centroid; centroidRed]
-        disp(alpha);                 %displays the alpha value
-        angle = [angle; alpha];
+        disp(red)                   %disp('1')
+        disp(centroidRed)           %disp('the centroid')
+        disp(alpha)                 %displays the alpha value
     end                       %end if Ar>XXXX
     if Ag>2000
-        % To find Heading Green
+        %% To find Heading Green
         %get the x coord; expanding rows of coloumn 1
         xg = centroidGreen(:,1);
         %get the y coord; expanding rows of coulumn 2
@@ -137,10 +149,15 @@ function [centroid, angle, color] = color_recognition(vidDevice)
             green=2;                 %assigns color to integer
         end
         disp(green)                  %disp('2')
-        color = [color; green];
         disp(centroidGreen)          %disp('centroidGreen')
-        centroid = [centroid; centroidGreen];
         disp(beta)                   %displays the alpha value
-        angle = [angle; beta];
     end                              %end ifAg>xxx
-end
+    
+    
+end                                  %'while' processig
+
+%% Clearing Memory
+
+% Release all memory and buffer used
+release(hVideoIn);
+release(vidDevice);
