@@ -1,10 +1,10 @@
 To launch MATLAB without Desktop use the following command:
->> matlab -nojvm -nodisplay -nosplash
+>> matlab -nodisplay -nosplash
 
 The above command will open up the MATLAB terminal and allow the input of MATLAB terminal commands.
 
 To launch a MATLAB script without Desktop use the following command:
->> matlab -nojvm -nodisplay -nosplash < ~/Path/to/script/MyScript.m
+>> matlab -nodisplay -nosplash < ~/Path/to/script/MyScript.m
 
 This script needs to be in the working directory when MATLAB opens for it to be executed. If the script is not in the working directory, the absolute path to the script may be used.
 
