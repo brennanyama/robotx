@@ -1,3 +1,32 @@
+From the Ground Station:
+1. Connect to the RIPLAB2 Wi-Fi network
+2. Open Terminal and type
+  ssh ros@192.168.0.15
+3. If prompted, allow the connection via SSH to the NUC.
+4. Then launch ROScore by typing the following command:
+  roscore &
+5. Launch the SLAM package by typing the following command:
+  roslaunch slam slamming.launch &
+6. Navigate to the MATLAB directory on the NUC using the following command:
+  cd ~/Desktop/Matlab2016b/bin/glnxa64/
+7. Launch MATLAB using the following command:
+  ./MATLAB -nodisplay -nosplash
+8. This will launch MATLAB. In the MATLAB command line navigate to the folder with the script you want to run with the following command:
+  cd ~/Folder/path/to/
+9. Launch the master ROS node in the MATLAB command line by typing:
+  rosinit
+10. Launch your script by typing the name of the script in the MATLAB command line:
+  scriptname
+
+ ================================================================================= 
+
+To transfer files from the Ground Station to the NUC
+1. Open Terminal
+2. Type the command:
+  scp <folder/path/filename> ros@192.168.0.15:<folder/Path/destination>
+
+==================================================================================
+
 To launch MATLAB without Desktop use the following command:
 >> matlab -nodisplay -nosplash
 
