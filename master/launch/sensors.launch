@@ -14,11 +14,16 @@
         <param name="base_stabilized_frame" type="string" value="/base_stabilized" />
         <param name="base_frame" type="string" value="base_frame"/>
   </node>
+        
+<include
+	file="$(find razor_imu_9dof)/launch/razor-pub2.launch"
+/>
+<node
+          pkg="urg_node" type="urg_node" name="lidar"
+	>
+        <param name="ip_address" value="192.168.0.10" />
 
-	<node pkg="urg_node" type="urg_node" name="lidar">
-		<param name="ip_address" value="192.168.0.10" />
-  </node>
-
+        </node>
 	<node pkg="nmea_navsat_driver" type="nmea_serial_driver" name="gps">
 				<param name="port" value="/dev/gps"/>
 				<param name="baud" value="4800"/>			
