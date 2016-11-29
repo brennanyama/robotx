@@ -24,9 +24,9 @@ function [time_params,lumped_params,geometry_params,pid_gains,control_tolerances
     kp_pos = 1;
     ki_pos = 0;
     kd_pos = 0;
-    kp_psi = 4000; %40;
-    ki_psi = 20;%2;     %10,0,0,40,0.5,5,5,0,2
-    kd_psi = 400; %5;
+    kp_psi = 75; %40;
+    ki_psi = 40;%2;     %10,0,0,40,0.5,5,5,0,2
+    kd_psi = 75; %5;
     kp_vel = 0;
     ki_vel = 0;
     kd_vel = 0;

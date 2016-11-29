@@ -49,7 +49,7 @@ GREEN = 2;
     % Output video player
     hVideoIn = vision.VideoPlayer;
     
-%Initialize variables
+% Initialize variables
 k = 1;
 event_map = zeros([1024, 1024]);    % Map used to record events
 event_flag = false;                 % Set to true when a new event is detected
@@ -58,30 +58,38 @@ wayY = [];                          % Waypoint Y coordinates
 pathX = [];
 pathY = [];
 error = zeros(9,30000);
+robotRadius = 2.5;
+
+% Initialize PRM object for path finding
+prm = robotics.PRM;
+prm.NumNodes = 50;
+prm.ConnectionDistance = 7;
 
 tic;                % Begin timer, used by motion controller
-% Receivers
-OGridData = receive(OGridSub);              % receive message from /map topic
-PoseData = receive(PoseSub);                % receive message from /poseupdate topic
-disp('Messages Received');
-% Extract relevant data from ROS messages
-disp('Starting occupancy grid to matrix conversion.');
-currentX = PoseData.Pose.Pose.Position.X;   % current X position SLAM estimate ROS
-currentY = PoseData.Pose.Pose.Position.Y;   % current Y position SLAM estimate ROS
-rotationZ = PoseData.Pose.Pose.Orientation.Z;   % current heading orientation ROS
-binaryMap = readBinaryOccupancyGrid(OGridData);       % Binary occupancy grid MATLAB
-phi = 0;
-inflate(binaryMap, 0.02);
-matrixOGrid = convB2M(binaryMap);                     % Matrix map DSTAR
-currentPos = convP2M(currentX, currentY, binaryMap);  % Converts current Pos from ros to matrix form
+
 
 while (1)
+    % Receivers
+    OGridData = receive(OGridSub);              % receive message from /map topic
+    PoseData = receive(PoseSub);                % receive message from /poseupdate topic
+    disp('Messages Received');
+    phi = 0;
+    
+    % Update variables from ROS
+    disp('Starting occupancy grid to matrix conversion.');
+    currentX = PoseData.Pose.Pose.Position.X;   % current X position SLAM estimate ROS
+    currentY = PoseData.Pose.Pose.Position.Y;   % current Y position SLAM estimate ROS
+    rotationZ = PoseData.Pose.Pose.Orientation.Z;   % current heading orientation ROS
+    binaryMap = readBinaryOccupancyGrid(OGridData);       % Binary occupancy grid MATLAB
+    inflate(binaryMap, robotRadius);
+    prm.Map = binaryMap;                        % set map for path planning
+    currentPosition = [currentX, currentY];
+    
     % Process Camera Data
     disp('Starting color recognition.');
     [centroid, phi, color] = color_recognition(vidDevice); %added green to this
     disp('Camera Detected Objects:');
     disp(centroid); disp(phi); disp(color);
-    
     
     % Event Handler
     disp(['Starting event handler.', toc]);
@@ -107,17 +115,18 @@ while (1)
         wayY = destY;                    %
         disp('New set of waypoints: ');
         disp(wayX); disp(wayY);
-        %        log_msg.msg = 'New set of Waypoints.';
-        %        send(log_pub, log_msg);
     end
     
-    % Shortest Path using D*
+    % Shortest Path using PRM
     disp('Starting path planning.');
     if (and(~isempty(wayX), isempty(pathX)))          % Arrived at the end of the path and need to process next waypoint
         
         xyOg = convP2M(wayX(1), wayY(1), binaryMap);
         
-        [pathX, pathY] = find_path(currentPos, xyOg(1), xyOg(2), matrixOGrid);
+        PRM_path = findpath(prm, currentPosition, xyOg);
+        pathX = PRM_path(:, 1);
+        pathY = PRM_path(:, 2);
+        show(prm);                      % Show path
         disp('Waypoint sent to path planner: ');
         disp(xyOg(1)); disp(xyOg(2));
         wayX(1) = [];                   % Remove the first waypoint
@@ -170,7 +179,6 @@ while (1)
     if k < 1
         k = 1;
     end
-    pause;
 end
 
 % Release all memory and buffer used
