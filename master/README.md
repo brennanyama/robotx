@@ -2,7 +2,9 @@
 
 ## Notice
 
-Work in progress, nothing works right now. Currently setting up transforms and making launch files easier to edit.
+11/28: Code currently posts properly, needs to be tested with sensors attached. Uses GPS, IMU, LIDAR.
+
+11/27: Work in progress, nothing works right now. Currently setting up transforms and making launch files easier to edit.
 
 ## About
 

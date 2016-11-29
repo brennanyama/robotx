@@ -2,28 +2,28 @@
 
 # SLAM
 hector_mapping:
-	pub_map_odom_transform: true
-	use_tf_scan_transformation: true
-	map_frame: map
-	base_frame: base_link_bottom
-	odom_frame: base_link_bottom
+  pub_map_odom_transform: true
+  use_tf_scan_transformation: true
+  map_frame: map
+  base_frame: base_link_bottom
+  odom_frame: base_link_bottom
 
-	map_resolution: 0.1
-	map_size: 1024
-	map_start_x: 0.5
-	map_start_y: 0.5
-	map_multi_res_levels: 2
+  map_resolution: 0.1
+  map_size: 1024
+  map_start_x: 0.5
+  map_start_y: 0.5
+  map_multi_res_levels: 2
 
-	update_factor_free: 0.4
-	update_factor_occupied: 0.9
-	map_update_distance_thresh: 0.4
-	map_update_angle_thresh: 0.06
-	laser_z_min_value: -0.1
-	laser_z_max_value: 1.0
+  update_factor_free: 0.4
+  update_factor_occupied: 0.9
+  map_update_distance_thresh: 0.4
+  map_update_angle_thresh: 0.06
+  laser_z_min_value: -0.1
+  laser_z_max_value: 1.0
 
-	advertise_map_service: true
-	scan_subscriber_queue_service: 0.05
-	scan_topic: scan
+  advertise_map_service: true
+  scan_subscriber_queue_service: 0.05
+  scan_topic: scan
 
 hector_trajectory_server:
 	target_frame_name: /map
