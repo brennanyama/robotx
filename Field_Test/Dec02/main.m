@@ -50,7 +50,7 @@ wayX = [];                          % Waypoint X coordinates
 wayY = [];                          % Waypoint Y coordinates
 pathX = [];
 pathY = [];
-robotRadius = 2.5;
+robotRadius = 0.5;
 
 % Initialize PRM object for path finding
 prm = robotics.PRM;
