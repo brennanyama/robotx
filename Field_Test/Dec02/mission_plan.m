@@ -7,14 +7,12 @@ function [destX, destY] = mission_plan(event_map, currX, currY)
     AXIS = 1;
     
     % Spiral Search Pattern Parameters
-    R = 40;          % Radius of sprial search pattern
+    R = 4;          % Radius of sprial search pattern
     turns = 3;      % Number of turns for search
     
     if(max(event_map) == 0) % there are no events on the map
-        disp('No events found. Holding position.');
-        destX = currX;
-        destY = currY;
-%        [destX, destY] = linemove(currX, currY, AXIS); % spirsearch(R, turns, currX, currY);   % Begin searching in a spiral pattern centered at current location
+        disp('No buoys found. Beginning search for buoys.');
+        [destX, destY] = spirsearch(R, turns, currX, currY);   % Begin searching in a spiral pattern centered at current location
     else
         [red_locX, red_locY] = find(event_map == RED);      % Location of all known red buoys returned as column vectors
         [green_locX, green_locY] = find(event_map == GREEN);   % Location of all known green buoys returned as column vectors
