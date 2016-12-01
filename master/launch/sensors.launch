@@ -1,5 +1,5 @@
 <launch>
-  <arg name="razor_config_file" default="$(find razor_imu_9dof)/config/my_razor.yaml"/>
+  <arg name="razor_config_file" default="$(find master)/params/my_razor.yaml"/>
   <node pkg="razor_imu_9dof" type="imu_node.py" name="imu_node" output="screen">
     <rosparam file="$(arg razor_config_file)" command="load"/>
   </node>
@@ -14,16 +14,11 @@
         <param name="base_stabilized_frame" type="string" value="/base_stabilized" />
         <param name="base_frame" type="string" value="base_frame"/>
   </node>
-        
-<include
-	file="$(find razor_imu_9dof)/launch/razor-pub2.launch"
-/>
-<node
-          pkg="urg_node" type="urg_node" name="lidar"
-	>
-        <param name="ip_address" value="192.168.0.10" />
 
-        </node>
+	<node pkg="urg_node" type="urg_node" name="lidar">
+		<param name="ip_address" value="192.168.0.10" />
+  </node>
+
 	<node pkg="nmea_navsat_driver" type="nmea_serial_driver" name="gps">
 				<param name="port" value="/dev/gps"/>
 				<param name="baud" value="4800"/>			

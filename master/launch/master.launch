@@ -1,23 +1,15 @@
 <launch>
 
 <!-- Launch file for imu and lidar-->
-	<include
-		file="$(find master)/launch/sensors.launch"
-	/>
+	<include file="$(find master)/launch/sensors.launch" />
 
 <!--launch file for SLAM-->
-	<include
-		file="$(find master)/launch/slam.launch"
-	/>
+	<include file="$(find master)/launch/slam.launch" />
 
 <!-- launch file for transforms-->
-	<include
-		file="$(find master)/launch/transforms.launch"
-	/>
+	<include file="$(find master)/launch/transforms.launch" />
 
 <!-- launch file for localization-->
-	<include
-		file="$(find master)/launch/localization.launch"
-	/>
+	<include file="$(find master)/launch/localization.launch" />
 
 </launch>
