@@ -63,43 +63,4 @@ function [x_est,y_est] = observer(k,time_params,y,x_est,y_est,u,lumped_params,ge
       subplot(n,1,k)
       plot(1:N, sV(k,:), '-', 1:N, xV(k,:), '--')
     end
-    
-    
-    
-    
-    
-    
-    
-%     % State observer
-%     A = [0 0 0 cos(pos_meas(3)) -sin(pos_meas(3)) 0;...                     % continuous state (system) matrix
-%             0 0 0 sin(pos_meas(3)) cos(pos_meas(3)) 0;...
-%             0 0 0 0 0 1;...
-%             0 0 0 -bu/m 0 0;...
-%             0 0 0 0 -bv/m 0;...
-%             0 0 0 0 0 -bpsi/I]; 
-%     B = [0 0 0 0;...                                                        % continuous control input matrix
-%         0 0 0 0;...
-%         0 0 0 0;...
-%         cos(theta)/m cos(theta)/m cos(theta)/m cos(theta)/m;...
-%         -sin(theta)/m sin(theta)/m -sin(theta)/m sin(theta)/m;...
-%         (w*cos(theta))/(2*I)+(l*sin(theta))/(2*I)...
-%         -(w*cos(theta))/(2*I)-(l*sin(theta))/(2*I)...
-%         -(w*cos(theta))/(2*I)-(l*sin(theta))/(2*I)...
-%         (w*cos(theta))/(2*I)+(l*sin(theta))/(2*I)];
-%     C = [eye(6);A(4:6,:)];                                                  % continuous output matrix
-%     [~,Bc] = size(B);
-%     [Cr,~] = size(C);
-%     D = zeros(Cr,Bc);                                                       % continuous feedthrough (direct transmission) matrix
-%     F = eye(6)+A*time_params(1);                                            % discrete state (system) matrix
-%     G = B*time_params(1);                                                   % discrete control input matrix
-%     H = C;                                                                  % discrete output matrix
-%     J = D;                                                                  % discrete feedthrough (direct transmission) matrix    
-%     if k ~= time_params(3)
-%         x_est(:,k+1) = F*x_est(:,k)+...                                     % state estimate integration solution
-%             L*([pos_meas;vel_meas;acc_meas]-y_est(:,k))+...
-%             G*[u(1,k);u(2,k);u(3,k);u(4,k)];
-%         y_est(:,k+1) = H*x_est(:,k)+...                                     % output estimate matrix integration solution
-%             J*[u(1,k);u(2,k);u(3,k);u(4,k)];
-%     end
-
 end
