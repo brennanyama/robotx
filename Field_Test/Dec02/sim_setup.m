@@ -44,12 +44,6 @@ function [time_params,lumped_params,geometry_params,pid_gains,control_tolerances
     
     % Initialize state and output matrix
     x = zeros(6,N);     % NEED TO CHANGE TO TAKE DATA FROM STATE ESTIMATION
-    x(1,1) = 0;         % x-position initial condition
-    x(2,1) = 0;         % y-position initial condition
-    x(3,1) = 0;         % psi (heading) initial condition
-    x(4,1) = 1;         % surge (forward) velocity initial condition
-    x(5,1) = 1;         % sway (transverse) velocity initial condition
-    x(6,1) = 1;         % psi (heading) velocity initial condition
     y = zeros(9,N);
     
     % Sensor variables
