@@ -38,16 +38,13 @@ GREEN = 2;
 
 % Initialize Color Recognition
     % Acquire input video stream
-    vidDevice = imaq.VideoDevice('linuxvideo',1); 
+    vidDevice = imaq.VideoDevice('linuxvideo'); 
 
     % Set VideoFormat property
     vidDevice.VideoFormat = 'RGB24_640x480';
 
     % Acquire input video property
     vidInfo = imaqhwinfo(vidDevice); 
-
-    % Output video player
-    hVideoIn = vision.VideoPlayer;
     
 % Initialize variables
 k = 1;
