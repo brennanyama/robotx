@@ -27,3 +27,4 @@ function behavior = select_behavior(k,x,control_tolerances,error,behavior)
             end
         end
     end
+end
