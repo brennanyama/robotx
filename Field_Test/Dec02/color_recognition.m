@@ -1,5 +1,7 @@
 function [centroid, angle, color] = color_recognition(vidDevice)
     centroid = []; angle = []; color = [];
+    red = 1;
+    green = 2;
     % Set blob analysis handling
     hblob = vision.BlobAnalysis('AreaOutputPort', false, ...
         'CentroidOutputPort', true, ...
@@ -69,15 +71,6 @@ function [centroid, angle, color] = color_recognition(vidDevice)
     % Get the centroids and bounding boxes of the green blobs
     [centroidGreen, bboxGreen] = step(hblob, GreenBW);
     
-    % Instert the red box
-    vidIn = step(hshapeinsRedBox, rgbFrame, bboxRed);
-    
-    % Instert the green box
-    vidIn = step(hshapeinsGreenBox, vidIn, bboxGreen);
-    
-    % Output video stream
-    step(hVideoIn, vidIn);
-    
     % Calculate Colors
     wr = bboxRed(:,3);           %to get width
     hr = bboxRed(:,4);           %to get height
@@ -103,12 +96,10 @@ function [centroid, angle, color] = color_recognition(vidDevice)
         end                         %'if/else'
         alpha=alpha*180/pi;         %changes alpha from rad to deg
         alpha = alpha-90;           %makes 90degree forward
-        
-        if xr>0                     %if xcoord of red exists 
-            red=1;                  %assigining an integer to the color
-        end
+
         disp('Red:');                   %disp('1')
-        color = [color; red];
+        temp = red*ones(size(centroidRed));
+        color = [color; temp];
         disp(centroidRed);           %disp('the centroid')
         centroid = [centroid; centroidRed]
         disp(alpha);                 %displays the alpha value
@@ -133,11 +124,9 @@ function [centroid, angle, color] = color_recognition(vidDevice)
         beta=beta*180/pi;            %changes alpha from rad to deg
         beta = beta-90;              %makes 90degree forward
         
-        if xg>0                      %if xcoord green exists
-            green=2;                 %assigns color to integer
-        end
         disp(green)                  %disp('2')
-        color = [color; green];
+        temp = green*ones(size(centroidGreen));
+        color = [color; temp];
         disp(centroidGreen)          %disp('centroidGreen')
         centroid = [centroid; centroidGreen];
         disp(beta)                   %displays the alpha value
