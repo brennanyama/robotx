@@ -11,9 +11,7 @@ GREEN = 2;
 % Subscriptions
     % Mission Planner
         OGridSub = rossubscriber('/map', 'nav_msgs/OccupancyGrid');     %Occupancy Grid from ROS
-        PoseSub = rossubscriber('/poseupdate', 'geometry_msgs/PoseWithCovarianceStamped');  %NEED TO UPDATE TO WORK WITH NEW LOCALIZATION
-        CameraHeadSub = rossubscriber('/cameraHead', 'geometry_msgs/Pose');     %Orientation of WAM-V from camera
-        CameraColorSub = rossubscriber('/cameraColor', 'std_msgs/UInt8');       %Color from camera
+        OdoSub = rossubscriber('/odometry/filtered', 'nav_msgs/Odometry.msg');  %State estimate
         GPSSub = rossubscriber('/GPSLocation', 'sensor_msgs/NavSatFix');
         
 % Publications
@@ -24,8 +22,6 @@ GREEN = 2;
         mQ4_pub = rospublisher('/motor_q4', 'std_msgs/UInt16');   % create Matlab publisher to Q4 Arduino
 
 % Messages
-    % Mission Planner
-    
     % Arduino
         mQ1_msg = rosmessage(mQ1_pub);    % create blank ros message for /servoQ1
         mQ2_msg = rosmessage(mQ2_pub);    % create blank ros message for /servoQ2
@@ -71,20 +67,35 @@ tic;                % Begin timer, used by motion controller
 while (1)
     % Receivers
     OGridData = receive(OGridSub);              % receive message from /map topic
-    PoseData = receive(PoseSub);                % NEED TO UPDATE WITH NEW LOCALIZATION
+    OdoData = receive(OdoSub);                % NEED TO UPDATE WITH NEW LOCALIZATION
     disp('Messages Received');
     phi = 0;
     
     % Update variables from ROS
     disp('Starting occupancy grid to matrix conversion.');
-    currentX = PoseData.Pose.Pose.Position.X;   % current X position SLAM estimate ROS
-    currentY = PoseData.Pose.Pose.Position.Y;   % current Y position SLAM estimate ROS
-    rotationZ = PoseData.Pose.Pose.Orientation.Z;   % current heading orientation ROS
+    currentX = OdoData.Pose.Pose.Position.X;   % current X position SLAM estimate ROS
+    currentY = OdoData.Pose.Pose.Position.Y;   % current Y position SLAM estimate ROS
+    quaternionX = OdoData.Pose.Pose.Orientation.X;   % current heading orientation ROS
+    quaternionY = OdoData.Pose.Pose.Orientation.Y;   % current heading orientation ROS
+    quaternionZ = OdoData.Pose.Pose.Orientation.Z;   % current heading orientation ROS
+    quaternionW = OdoData.Pose.Pose.Orientation.W;   % current heading orientation ROS
+    twistX = OdoData.Twist.Twist.Linear.X;          % current X velocity
+    twistY = OdoData.Twist.Twist.Linear.Y;
+    twistZ = OdoData.Twist.Twist.Linear.Z;
     binaryMap = readBinaryOccupancyGrid(OGridData);       % Binary occupancy grid MATLAB
     inflate(binaryMap, robotRadius);
     prm.Map = binaryMap;                        % set map for path planning
     currentPosition = [currentX, currentY];
     
+    % Set initial conditions
+    if isequal(k, 1)
+        x(1, k) = currentX;
+        x(2, k) = currentY;
+        x(3, k) = atan2((2*(quaternionX*quaternionY+quaternionZ*quaternionW))/(quaternionX^2+quaternionY^2-quaternionZ^2-quaternionW^2));
+        x(4, k) = twistX;
+        x(5, k) = twistY;
+        x(6, k) = atan2(twistY, twistX);
+    end
     % Process Camera Data
     disp('Starting color recognition.');
     [centroid, phi, color] = color_recognition(vidDevice); %added green to this
@@ -132,7 +143,7 @@ while (1)
         wayX(1) = [];                   % Remove the first waypoint
         wayY(1) = [];                   % Remove the first waypoint
         
-    elseif (~isempty(pathX))     %(length(pathX) > 0)                                  % Still have to get to the end of the path
+    elseif (~isempty(pathX))                       % Still have to get to the end of the path
         psi = end_angle(pathX, pathY, rotationZ);  % Arrive at the point and face the direction of the next point
         
         pos = convM2P(pathX(1), pathY(1), binaryMap);
