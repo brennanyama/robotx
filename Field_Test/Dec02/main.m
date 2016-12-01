@@ -65,6 +65,7 @@ tic;                % Begin timer, used by motion controller
 
 
 while (1)
+    disp(['Loop iteration: ', num2str(k)]);
     % Receivers
     OGridData = receive(OGridSub);              % receive message from /map topic
     OdoData = receive(OdoSub);                % NEED TO UPDATE WITH NEW LOCALIZATION
@@ -72,7 +73,6 @@ while (1)
     phi = 0;
     
     % Update variables from ROS
-    disp('Starting occupancy grid to matrix conversion.');
     currentX = OdoData.Pose.Pose.Position.X;   % current X position SLAM estimate ROS
     currentY = OdoData.Pose.Pose.Position.Y;   % current Y position SLAM estimate ROS
     quaternionX = OdoData.Pose.Pose.Orientation.X;   % current heading orientation ROS
@@ -86,7 +86,8 @@ while (1)
     inflate(binaryMap, robotRadius);
     prm.Map = binaryMap;                        % set map for path planning
     currentPosition = [currentX, currentY];
-    
+    disp('Odometry Position: ');
+    disp(currentPosition);
     % Set initial conditions
     if isequal(k, 1)
         x(1, k) = currentX;
@@ -103,24 +104,28 @@ while (1)
     disp([centroid, phi, color]);
     
     % Event Handler
-    disp(['Starting event handler.', toc]);
-    [xObj, yObj] = event_location(currentX, currentY, rotationZ, phi, binaryMap);
+    disp('Starting event handler.');
+    while   (~isempty(phi))
+        [xObj, yObj] = event_location(currentX, currentY, rotationZ, phi(1), binaryMap);
     
-    if (~(isequal(xObj, 6969) || isequal(yObj, 6969)))
+        if (~(isequal(xObj, 6969) || isequal(yObj, 6969)))
         
-        xyIn = convP2M(xObj, yObj, binaryMap);
-        event_map(xyIn(1), xyIn(2)) = RED;  % CameraColorData;           % Update event map
-        event_flag = true;
-        disp('Event Found: ');
-        disp([xObj, yObj]);
-    else
-        event_flag = false;
+            xyIn = convP2M(xObj, yObj, binaryMap);
+            event_map(xyIn(1), xyIn(2)) = color(1);          % Update event map
+            event_flag = true;
+            disp('Event Found: ');
+            disp([xObj, yObj]);
+        end
+        
+        centroid(1, :) = [];            % Remove processed colors
+        phi(1) = [];
+        color(1) = [];
     end
     
     % Wapoint Descision Logic - sets goalX and goalY coordinates
     disp('Starting Mission Planner.');
     disp(toc);
-    if (event_flag || isequal(length(wayX),0))
+    if (event_flag || isempty(wayX))
         [destX, destY] = mission_plan(event_map, currentX, currentY);
         wayX = destX;                    % Create a new set of waypoints from mission planner
         wayY = destY;                    %
@@ -186,6 +191,9 @@ while (1)
     
     % Update Loop Variables
     k = int32(mod(k, time_params(3))+1);
+    
+    % Reset logic flags
+    event_flag = false;
 end
 
 % Release all memory and buffer used
