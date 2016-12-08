@@ -14,7 +14,7 @@ Arduino: https://www.sparkfun.com/products/10736
    `cp razor.yaml my_razor.yaml`
 4. Run IMU
    `roslaunch razor_imu_9dof razor-pub.launch`
-5. Calibrate IMU:  instructions at http://wiki.ros.org/razor_imu_9dof
+5. 'Calibrate IMU': https://github.com/Razor-AHRS/razor-9dof-ahrs/wiki/Tutorial
 6. Check imu topic
     `rostopic echo /imu`
 
