@@ -213,10 +213,10 @@ boolean output_errors = false;  // true or false
 // Put MIN/MAX and OFFSET readings for your board here!
 // Accelerometer
 // "accel x,y,z (min/max) = X_MIN/X_MAX  Y_MIN/Y_MAX  Z_MIN/Z_MAX"
-#define ACCEL_X_MIN ((float) -267)
-#define ACCEL_X_MAX ((float) 246)   //- 
-#define ACCEL_Y_MIN ((float) -246)
-#define ACCEL_Y_MAX ((float) 269)
+#define ACCEL_X_MIN ((float) -269)
+#define ACCEL_X_MAX ((float) 247)   //- 
+#define ACCEL_Y_MIN ((float) -249)
+#define ACCEL_Y_MAX ((float) 260)
 #define ACCEL_Z_MIN ((float) -281)   
 #define ACCEL_Z_MAX ((float) 216)
 
