@@ -10,6 +10,7 @@
 	<include file="$(find master)/launch/transforms.launch" />
 
 <!-- launch file for localization-->
-	<include file="$(find master)/launch/localization.launch" />
+	<include file="$(find master)/launch/localization.launch" />  
+
 
 </launch>

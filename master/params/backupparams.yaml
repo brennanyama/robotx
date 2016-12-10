@@ -1,7 +1,7 @@
 # Master parameter list
 
 ### SLAM
-#hector_mapping:
+hector_mapping:
   pub_map_odom_transform: true
   use_tf_scan_transformation: true
   map_frame: map
@@ -26,7 +26,7 @@
   scan_topic: scan
 
 ### PATH DISPLAY
-#hector_trajectory_server:
+hector_trajectory_server:
   target_frame_name: /map
   source_frame_name: /base_link
   trajectory_update_rate: 2
@@ -51,23 +51,14 @@ ukf_odom_imu:
 
   imu0: /top_imu
   imu0_config: [false, false, false,
-                false, false, true,
+                true, true, true,
                 false, false, false,
                 false, false,  true,
-                true,  false, false]
+                true,  true, false]
   imu0_queue_size: 5
   imu0_differential: false
   imu0_relative: false
   imu0_remove_gravitational_acceleration: true
-
-  odom0: /odometry/gps
-  odom0_config: [true, true, false,
-                false, false, false,
-                false, false, false,
-                false, false,  false,
-                false, false, false]
-  odom0_queue_size: 5
-  odom0_differential: false
     
 
 ###ukf_se_map:
@@ -85,18 +76,27 @@ ukf_se_map:
   world_frame: map
 
 
-  
-
-  odom0: BrennansOdo
+  odom0: odometry/odom
   odom0_config: [true, true, false,
+                false, false, true,
                 false, false, false,
-                false, false, false,
-                false, false, false,
-                false, false, false]
+                false, false, true,
+                true, true, false]
   odom0_nodelay: false
   odom0_differential: false
   odom0_relative: false
   odom0_queue_size: 10
+
+  odom1: BrennansOdo
+  odom1_config: [true, true, false,
+                false, false, false,
+                false, false, false,
+                false, false, false,
+                false, false, false]
+  odom1_nodelay: false
+  odom1_differential: false
+  odom1_relative: false
+  odom1_queue_size: 10
 
 
 ### GPS LOCALIZATION

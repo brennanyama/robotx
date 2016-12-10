@@ -2,6 +2,8 @@
 
 ## Notice
 
+12/9: Uploaded files used to test with imu, imu and gps. Everything works EXCEPT GPS INTEGRATION
+
 12/4: added new files that hopefully fixed the GPS localization integration. Read instructions for usage
 
 11/28: Code currently posts properly, needs to be tested with sensors attached. Uses GPS, IMU, LIDAR.
