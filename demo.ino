@@ -167,18 +167,18 @@ analogWrite(motor, 180);
       Serial.println("ktk");
       delay(10);
     }
-    if (LS == HIGH){ 
-      analogWrite(motor, 180);
-      Serial.println ("LS Pressed");
-      delay(10);
-      encoderPos ++;
-     
-    }
-       
+    if (LS == HIGH)
+      { 
+        analogWrite(motor, 180);
+        Serial.println ("LS Pressed");
+        delay(10);
+        encoderPos ++;  
       }
-      
-     }
+       
     }
+      
+   }
+ }
 }
 
 
