@@ -3,6 +3,8 @@
 #include <Servo.h>
 #include <math.h>
 #include <MatrixMath.h>
+#include <ros.h>
+#include <std_msgs/Int8.h>
 
 #define encoderPinA 2          
 #define encoderPinB 3
@@ -44,6 +46,19 @@ Stepper myStepper(200, in1Pin, in2Pin, in3Pin, in4Pin);
 //double Jac[2][2];          
 //double D;
 
+ros::NodeHandle nh;
+
+void angle(const std_msgs::Int8& cmd_msg)
+{
+  desangle = cmd_msg.data;
+  
+}
+
+void extension(const std_msgs::Int8& cmd_msg)
+{
+  steps = cmd_msg.data*454.545455;
+}
+  
 void doEncoderA()             //when doencoder is called, increase position
 {
   encoderPos++;
@@ -55,7 +70,9 @@ void doEncoderB()             //when doencoder is called, increase position
 }
 
 void setup() {
-
+  nh.initNode()
+  nh.subscribe(angle_sub);
+  nh.subscribe(extension_sub);
   // Stepper motor
   pinMode(in1Pin, OUTPUT);
   pinMode(in2Pin, OUTPUT);
@@ -182,5 +199,4 @@ analogWrite(motor, 180);
      }
     }
 }
-
 
