@@ -23,3 +23,5 @@ The ultimate goal of the Event Handler is to be able to identify what kind of ob
 
 * Lidar will always find objuects even if camera does not
 * We only publish locations if: We have a actual occupied area in OGrid that is big enough to be an object, and we can get some kind of color nd heading from camera in object general location We will prioritize and label object depending on size and color of object.
+
+http://u.forre.st/sdgps/
