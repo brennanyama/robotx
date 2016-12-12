@@ -19,3 +19,8 @@ This folder is a list of all launch files and a master launch file that will be 
 1. Copy files from launch and params try_this into local caktin/src/master respective folders.
 2. There is no second IMU set up. Don't worry about it for now.
 3. if the IMU TF fails to work, go in to razor-imu by roscd, nodes, then open imu_node.py. Search for 'frame' and check that the frame_id is the same as the frame listed in the transforms.launch file.
+
+
+Custom Localization Software:
+
+http://u.forre.st/sdgps/
