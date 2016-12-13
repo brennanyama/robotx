@@ -1,11 +1,11 @@
-function [time_params,lumped_params,geometry_params,pid_gains,control_tolerances,control_maximums,x,y,snr,rr,meas,u,up,ui,ud,error,int,behavior] = sim_setup()
+function [time_params,lumped_params,geometry_params,pid_gains,control_tolerances,x,y,snr,rr,meas,u,up,ui,ud,error,int,behavior] = sim_setup()
 
     % Time variables
     dt = .01;                       % simulation time step [s]
     tend = 200;                     % simulation end time [s]
     N = round(tend/dt);             % number of steps [ ]
     time_params = [dt,tend,N];      % output matrix
-        
+          
     % Model lumped parameters
     m = 225;                            % mass [kg]
     I = 100;                            % inertia [kg*m^2]
@@ -21,21 +21,21 @@ function [time_params,lumped_params,geometry_params,pid_gains,control_tolerances
     geometry_params = [theta,w,l];  % output matrix
     
     % Controller gains
-    kp_pos = 10
+    kp_pos = 100;
     ki_pos = 0;
-    kd_pos = 2
-    kp_psi = 10;
-    ki_psi = 0     %10,0,0,40,0.5,5,5,0,2
-    kd_psi = 2
-    kp_vel = 10
+    kd_pos = 5;
+    kp_psi = 100;
+    ki_psi = 0;    %10,0,0,40,0.5,5,5,0,2
+    kd_psi = 5;
+    kp_vel = 100;
     ki_vel = 0;
-    kd_vel = 2
+    kd_vel = 5;
     pid_gains = [kp_pos,ki_pos,kd_pos,...
         kp_psi,ki_psi,kd_psi,...
         kp_vel,ki_vel,kd_vel];
     
     % Control tolerances
-    AR = 5                                           % approach radius [m]
+    AR = 5;                                           % approach radius [m]
     GR = 0.5;                                           % goal radius [m]
     PHT = deg2rad(10);                                  % path heading tolerance [rad]
     GHT = deg2rad(5);                                   % goal heading tolerance [rad]

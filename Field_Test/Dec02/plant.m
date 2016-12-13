@@ -1,4 +1,4 @@
-function [x,y] = plant(k,time_params,x,y,u,lumped_params,geometry_params)
+function [x,y] = plant(k,dt,time_params,x,y,u,lumped_params,geometry_params)
 
     % Define lumped and geometry parameters
     m = lumped_params(1);
@@ -30,8 +30,8 @@ function [x,y] = plant(k,time_params,x,y,u,lumped_params,geometry_params)
     [~,Bc] = size(B);
     [Cr,~] = size(C);
     D = zeros(Cr,Bc);                                                       % continuous feedthrough (direct transmission) matrix
-    F = eye(6)+A*time_params(1);                                            % discrete state (system) matrix
-    G = B*time_params(1);                                                   % discrete control input matrix
+    F = eye(6)+A*dt;                                            % discrete state (system) matrix
+    G = B*dt;                                                   % discrete control input matrix
     H = C;                                                                  % discrete output matrix
     J = D;                                                                  % discrete feedthrough (direct transmission) matrix
     if k ~= time_params(3)

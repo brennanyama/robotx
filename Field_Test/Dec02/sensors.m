@@ -1,6 +1,4 @@
-function meas = sensors(y,meas,k,time_params,snr,rr)
-
-    dt = time_params(1);                            % time step
+function meas = sensors(y,meas,k,dt,time_params,snr,rr)
 
     if k ~= time_params(3)
         % Position
