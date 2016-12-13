@@ -35,7 +35,7 @@
 
 
 ### LOCALIZATION
-ukf_odom_imu:
+#ukf_odom_imu:
   frequency: 30
   sensor_timeout: 0.1
   two_d_mode: true
@@ -71,7 +71,7 @@ ukf_odom_imu:
     
 
 ###ukf_se_map:
-ukf_se_map:
+#ukf_se_map:
   frequency: 30
   sensor_timeout: 0.1
   two_d_mode: true
