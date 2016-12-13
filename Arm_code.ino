@@ -84,7 +84,7 @@ void doEncoderB()             //when doencoder is called, increase position
 {
   encoderPos++;
 }
-ros::Subscriber<std_msgs::Int8> reset_sub("armstart", rosreset);
+ros::Subscriber<std_msgs::Int8> reset_sub("armreset", rosreset);
 ros::Subscriber<std_msgs::Int8> start_sub("armstart", rosstart);
 ros::Subscriber<std_msgs::Int8> angle_sub("armangle", rosangle);
 ros::Subscriber<std_msgs::Int8> extension_sub("armextension", rosextension);
