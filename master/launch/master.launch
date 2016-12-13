@@ -9,8 +9,8 @@
 <!-- launch file for transforms-->
 	<include file="$(find master)/launch/transforms.launch" />
 
-<!-- launch file for localization-->
+<!-- launch file for localization
 	<include file="$(find master)/launch/localization.launch" />  
-
+-->
 
 </launch>
