@@ -14,6 +14,9 @@ int rotate, inv_rotate; //rotation
 int auto_q1, auto_q2, auto_q3, auto_q4;
 int back_linear;
 int count = 0;
+int linear_last = 0;
+int rotate_last = 0;
+int inv_rotate_last = 0;
 
 std_msgs::UInt16 test;
 ros::NodeHandle nh;
@@ -67,12 +70,15 @@ void loop(){
   linear = map(ch1, 1130, 1869, 245, 100);
   inv_rotate = map(rotate, 100, 245, 245, 100);
   back_linear = map(linear, 245, 100, 100, 245); 
-  
+
+  // kill switch
   if(digitalRead(36) == LOW){
     digitalWrite(42, HIGH);
     digitalWrite(48, HIGH);
     digitalWrite(40, LOW);
   }
+
+  // manual
   else if(linear > 50 && linear < 244){
     noInterrupts();
     digitalWrite(42, LOW);
@@ -86,29 +92,58 @@ void loop(){
     if(rotate> 180){ //rotate right
       analogWrite(8, rotate);
       analogWrite(9, inv_rotate);
-      analogWrite(10, rotate);
-      analogWrite(11, inv_rotate);   
+      analogWrite(10, inv_rotate);
+      analogWrite(11, rotate);   
     }
     
     if(rotate<140){ //rotate left
       analogWrite(8, rotate);
       analogWrite(9, inv_rotate);
-      analogWrite(10, rotate);
-      analogWrite(11, inv_rotate);
+      analogWrite(10, inv_rotate);
+      analogWrite(11, rotate);
     }
-    
+    linear_last = linear;
+    rotate_last = rotate;
+    inv_rotate_last = inv_rotate;    
+    count = 0;  
   }
-  else{
-    interrupts();
-    digitalWrite(42, HIGH);
-    digitalWrite(48, LOW);
-    digitalWrite(40, HIGH);
+
+  // autonomous
+  else{      
+    count = count + 1;
+    if (count > 25){
+      interrupts();
+      digitalWrite(42, HIGH);
+      digitalWrite(48, LOW);
+      digitalWrite(40, HIGH); 
+    }
+    else{
+      noInterrupts();
+      digitalWrite(42, LOW);
+      digitalWrite(48, HIGH);
+      digitalWrite(40, HIGH);
+      analogWrite(8, linear_last);
+      analogWrite(9, linear_last);
+      analogWrite(10, linear_last);
+      analogWrite(11, linear_last);
+      
+      if(rotate> 180){ //rotate right
+        analogWrite(8, rotate_last);
+        analogWrite(9, inv_rotate_last);
+        analogWrite(10, inv_rotate_last);
+        analogWrite(11, rotate_last);   
+      }
+      
+      if(rotate<140){ //rotate left
+        analogWrite(8, rotate_last);
+        analogWrite(9, inv_rotate_last);
+        analogWrite(10, inv_rotate_last);
+        analogWrite(11, rotate_last);
+      }
+    }
   }
   
   nh.spinOnce();
   delay(1);
   
 }
-
-
-
