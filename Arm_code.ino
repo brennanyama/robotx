@@ -219,6 +219,6 @@ analogWrite(motor, 180);
   }
     myStepper.step((steps*454.545455));
     delay (2000);
-
+    lastpos = 0;
   
 }
