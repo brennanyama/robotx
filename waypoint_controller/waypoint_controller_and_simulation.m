@@ -54,7 +54,7 @@ function [time_params,lumped_params,geometry_params,pid_gains,control_tolerances
 
     % Time variables
     dt = .01;                       % simulation time step [s]
-    tend = 300;                     % simulation end time [s]
+    tend = 200;                     % simulation end time [s]
     N = round(tend/dt);             % number of steps [ ]
     time_params = [dt,tend,N];      % output matrix
     
@@ -73,15 +73,15 @@ function [time_params,lumped_params,geometry_params,pid_gains,control_tolerances
     geometry_params = [theta,w,l];  % output matrix
     
     % Controller gains
-    kp_pos = 10;
-    ki_pos = 0;
-    kd_pos = 2;
-    kp_psi = 10;    
-    ki_psi = 0;     
-    kd_psi = 2;
-    kp_vel = 10;
-    ki_vel = 0;
-    kd_vel = 2;
+    kp_pos = 100;
+    ki_pos = 1;
+    kd_pos = 5;
+    kp_psi = 150;    
+    ki_psi = 1;     
+    kd_psi = 3;
+    kp_vel = 200;
+    ki_vel = 1;
+    kd_vel = 3;
     pid_gains = [kp_pos,ki_pos,kd_pos,...
         kp_psi,ki_psi,kd_psi,...
         kp_vel,ki_vel,kd_vel];
@@ -120,8 +120,8 @@ function [time_params,lumped_params,geometry_params,pid_gains,control_tolerances
     ui = zeros(4,N);        % thurster integral gain [N]
     ud = zeros(4,N);        % thurster derivative gain [N]
     u = zeros(4,N);         % thurster total gain [N]
-    error = zeros(11,N);     % control variable error
-    int = zeros(11,N);       % control variable integrator
+    error = zeros(12,N);    % control variable error
+    int = zeros(12,N);      % control variable integrator
     behavior = zeros(1,N);  % behavior tracking matrix
 
 end
@@ -152,11 +152,12 @@ function error = update_error(k,x,meas,goal_vars,error)
     error(8,k) = 0.25-x(4,k);                           % surge velocity medium slow m/s error
     error(9,k) = 1.0-x(4,k);                            % surge velocity medium fast m/s error
     error(10,k) = 2.00-x(4,k);                          % surge velocity fast m/s error
-    error(11,k) = atan2(sin(atan2(goal_vars(2)-x(2,k),...    % HO FUCK EQUATION (there's a good story behind this one)
+    error(11,k) = 1.0 - x(5,k);                         % sway velocity fast m/s error
+    error(12,k) = atan2(sin(atan2(goal_vars(2)-x(2,k),...    % HO FUCK EQUATION (there's a good story behind this one)
         goal_vars(1)-x(1,k))-x(3,k)),...
         cos(atan2(goal_vars(2)-x(2,k),...
         goal_vars(1)-x(1,k))-x(3,k)))+deg2rad(-90);
-       
+    
 end
 
 function behavior = select_behavior(k,x,control_tolerances,error,behavior)
@@ -216,10 +217,10 @@ function [u,up,ui,ud,error,int] = calculate_gains(k,time_params,pid_gains,u,up,u
     % 4: control psi to path heading and control u to 0.75 m/s
     % 5: control u to 0 m/s
     % 6: control psi to goal heading and control u to 0 m/s
-    % 7: [ELSE] station keep
+    % 7: control x and y position to goal position (station keep)
     % 8: control psi to goal heading and control u to 1 m/s
     % 9: control psi to goal heading and drive straight at set duty cycle
-    % 10: control psi to path heading and control u to 1 m/s
+    % 10: control psi to -90 deg from path heading, and control v to 1 m/s
     
     if behavior(1,k) == 1   % control psi to path heading and control u to 1 m/s
         % Proportional gain
@@ -229,21 +230,11 @@ function [u,up,ui,ud,error,int] = calculate_gains(k,time_params,pid_gains,u,up,u
         up(4,k) = pid_gains(4)*error(5,k)+pid_gains(7)*error(9,k);
         % Integral gain
         if k > 1
-            int(1,k) = int(1,k-1)+error(1,k)*time_params(1);
-            int(2,k) = int(2,k-1)+error(2,k)*time_params(1);
-            int(3,k) = int(3,k-1)+error(3,k)*time_params(1);
-            int(4,k) = int(4,k-1)+error(4,k)*time_params(1);
-            int(5,k) = int(5,k-1)+error(5,k)*time_params(1);
-            int(6,k) = int(6,k-1)+error(6,k)*time_params(1);
-            int(7,k) = int(7,k-1)+error(7,k)*time_params(1);
-            int(8,k) = int(8,k-1)+error(8,k)*time_params(1);
-            int(9,k) = int(9,k-1)+error(9,k)*time_params(1);
-            int(10,k) = int(10,k-1)+error(10,k)*time_params(1);
-            int(11,k) = int(11,k-1)+error(11,k)*time_params(1);
-            ui(1,k) = pid_gains(5)*error(5,k)+pid_gains(8)*error(9,k);
-            ui(2,k) = -pid_gains(5)*error(5,k)+pid_gains(8)*error(9,k);
-            ui(3,k) = -pid_gains(5)*error(5,k)+pid_gains(8)*error(9,k);
-            ui(4,k) = pid_gains(5)*error(5,k)+pid_gains(8)*error(9,k);
+            int = increment_integrator(int,k,error,time_params);
+            ui(1,k) = pid_gains(5)*int(5,k)+pid_gains(8)*int(9,k);
+            ui(2,k) = -pid_gains(5)*int(5,k)+pid_gains(8)*int(9,k);
+            ui(3,k) = -pid_gains(5)*int(5,k)+pid_gains(8)*int(9,k);
+            ui(4,k) = pid_gains(5)*int(5,k)+pid_gains(8)*int(9,k);
         end
         % Derivative gain
         if k > 1
@@ -261,21 +252,11 @@ function [u,up,ui,ud,error,int] = calculate_gains(k,time_params,pid_gains,u,up,u
         up(4,k) = pid_gains(4)*error(5,k)+pid_gains(7)*error(10,k);
         % Integral gain
         if k > 1
-            int(1,k) = int(1,k-1)+error(1,k)*time_params(1);
-            int(2,k) = int(2,k-1)+error(2,k)*time_params(1);
-            int(3,k) = int(3,k-1)+error(3,k)*time_params(1);
-            int(4,k) = int(4,k-1)+error(4,k)*time_params(1);
-            int(5,k) = int(5,k-1)+error(5,k)*time_params(1);
-            int(6,k) = int(6,k-1)+error(6,k)*time_params(1);
-            int(7,k) = int(7,k-1)+error(7,k)*time_params(1);
-            int(8,k) = int(8,k-1)+error(8,k)*time_params(1);
-            int(9,k) = int(9,k-1)+error(9,k)*time_params(1);
-            int(10,k) = int(10,k-1)+error(10,k)*time_params(1);
-            int(11,k) = int(11,k-1)+error(11,k)*time_params(1);
-            ui(1,k) = pid_gains(5)*error(5,k)+pid_gains(8)*error(10,k);
-            ui(2,k) = -pid_gains(5)*error(5,k)+pid_gains(8)*error(10,k);
-            ui(3,k) = -pid_gains(5)*error(5,k)+pid_gains(8)*error(10,k);
-            ui(4,k) = pid_gains(5)*error(5,k)+pid_gains(8)*error(10,k);
+            int = increment_integrator(int,k,error,time_params);
+            ui(1,k) = pid_gains(5)*int(5,k)+pid_gains(8)*int(10,k);
+            ui(2,k) = -pid_gains(5)*int(5,k)+pid_gains(8)*int(10,k);
+            ui(3,k) = -pid_gains(5)*int(5,k)+pid_gains(8)*int(10,k);
+            ui(4,k) = pid_gains(5)*int(5,k)+pid_gains(8)*int(10,k);
         end
         % Derivative gain
         if k > 1
@@ -293,21 +274,11 @@ function [u,up,ui,ud,error,int] = calculate_gains(k,time_params,pid_gains,u,up,u
         up(4,k) = pid_gains(4)*error(5,k)+pid_gains(7)*error(7,k);
         % Integral gain
         if k > 1
-            int(1,k) = int(1,k-1)+error(1,k)*time_params(1);
-            int(2,k) = int(2,k-1)+error(2,k)*time_params(1);
-            int(3,k) = int(3,k-1)+error(3,k)*time_params(1);
-            int(4,k) = int(4,k-1)+error(4,k)*time_params(1);
-            int(5,k) = int(5,k-1)+error(5,k)*time_params(1);
-            int(6,k) = int(6,k-1)+error(6,k)*time_params(1);
-            int(7,k) = int(7,k-1)+error(7,k)*time_params(1);
-            int(8,k) = int(8,k-1)+error(8,k)*time_params(1);
-            int(9,k) = int(9,k-1)+error(9,k)*time_params(1);
-            int(10,k) = int(10,k-1)+error(10,k)*time_params(1);
-            int(11,k) = int(11,k-1)+error(11,k)*time_params(1);
-            ui(1,k) = pid_gains(5)*error(5,k)+pid_gains(8)*error(7,k);
-            ui(2,k) = -pid_gains(5)*error(5,k)+pid_gains(8)*error(7,k);
-            ui(3,k) = -pid_gains(5)*error(5,k)+pid_gains(8)*error(7,k);
-            ui(4,k) = pid_gains(5)*error(5,k)+pid_gains(8)*error(7,k);
+            int = increment_integrator(int,k,error,time_params);
+            ui(1,k) = pid_gains(5)*int(5,k)+pid_gains(8)*int(7,k);
+            ui(2,k) = -pid_gains(5)*int(5,k)+pid_gains(8)*int(7,k);
+            ui(3,k) = -pid_gains(5)*int(5,k)+pid_gains(8)*int(7,k);
+            ui(4,k) = pid_gains(5)*int(5,k)+pid_gains(8)*int(7,k);
         end
         % Derivative gain
         if k > 1
@@ -325,21 +296,11 @@ function [u,up,ui,ud,error,int] = calculate_gains(k,time_params,pid_gains,u,up,u
         up(4,k) = pid_gains(4)*error(5,k)+pid_gains(7)*error(8,k);
         % Integral gain
         if k > 1
-            int(1,k) = int(1,k-1)+error(1,k)*time_params(1);
-            int(2,k) = int(2,k-1)+error(2,k)*time_params(1);
-            int(3,k) = int(3,k-1)+error(3,k)*time_params(1);
-            int(4,k) = int(4,k-1)+error(4,k)*time_params(1);
-            int(5,k) = int(5,k-1)+error(5,k)*time_params(1);
-            int(6,k) = int(6,k-1)+error(6,k)*time_params(1);
-            int(7,k) = int(7,k-1)+error(7,k)*time_params(1);
-            int(8,k) = int(8,k-1)+error(8,k)*time_params(1);
-            int(9,k) = int(9,k-1)+error(9,k)*time_params(1);
-            int(10,k) = int(10,k-1)+error(10,k)*time_params(1);
-            int(11,k) = int(11,k-1)+error(11,k)*time_params(1);
-            ui(1,k) = pid_gains(5)*error(5,k)+pid_gains(8)*error(8,k);
-            ui(2,k) = -pid_gains(5)*error(5,k)+pid_gains(8)*error(8,k);
-            ui(3,k) = -pid_gains(5)*error(5,k)+pid_gains(8)*error(8,k);
-            ui(4,k) = pid_gains(5)*error(5,k)+pid_gains(8)*error(8,k);
+            int = increment_integrator(int,k,error,time_params);
+            ui(1,k) = pid_gains(5)*int(5,k)+pid_gains(8)*int(8,k);
+            ui(2,k) = -pid_gains(5)*int(5,k)+pid_gains(8)*int(8,k);
+            ui(3,k) = -pid_gains(5)*int(5,k)+pid_gains(8)*int(8,k);
+            ui(4,k) = pid_gains(5)*int(5,k)+pid_gains(8)*int(8,k);
         end
         % Derivative gain
         if k > 1
@@ -357,21 +318,11 @@ function [u,up,ui,ud,error,int] = calculate_gains(k,time_params,pid_gains,u,up,u
         up(4,k) = pid_gains(7)*error(6,k);
         % Integral gain
         if k > 1
-            int(1,k) = int(1,k-1)+error(1,k)*time_params(1);
-            int(2,k) = int(2,k-1)+error(2,k)*time_params(1);
-            int(3,k) = int(3,k-1)+error(3,k)*time_params(1);
-            int(4,k) = int(4,k-1)+error(4,k)*time_params(1);
-            int(5,k) = int(5,k-1)+error(5,k)*time_params(1);
-            int(6,k) = int(6,k-1)+error(6,k)*time_params(1);
-            int(7,k) = int(7,k-1)+error(7,k)*time_params(1);
-            int(8,k) = int(8,k-1)+error(8,k)*time_params(1);
-            int(9,k) = int(9,k-1)+error(9,k)*time_params(1);
-            int(10,k) = int(10,k-1)+error(10,k)*time_params(1);
-            int(11,k) = int(11,k-1)+error(11,k)*time_params(1);
-            ui(1,k) = pid_gains(8)*error(6,k);
-            ui(2,k) = pid_gains(8)*error(6,k);
-            ui(3,k) = pid_gains(8)*error(6,k);
-            ui(4,k) = pid_gains(8)*error(6,k);
+            int = increment_integrator(int,k,error,time_params);
+            ui(1,k) = pid_gains(8)*int(6,k);
+            ui(2,k) = pid_gains(8)*int(6,k);
+            ui(3,k) = pid_gains(8)*int(6,k);
+            ui(4,k) = pid_gains(8)*int(6,k);
         end
         % Derivative gain
         if k > 1
@@ -389,21 +340,11 @@ function [u,up,ui,ud,error,int] = calculate_gains(k,time_params,pid_gains,u,up,u
         up(4,k) = pid_gains(4)*error(5,k)+pid_gains(7)*error(6,k);
         % Integral gain
         if k > 1
-            int(1,k) = int(1,k-1)+error(1,k)*time_params(1);
-            int(2,k) = int(2,k-1)+error(2,k)*time_params(1);
-            int(3,k) = int(3,k-1)+error(3,k)*time_params(1);
-            int(4,k) = int(4,k-1)+error(4,k)*time_params(1);
-            int(5,k) = int(5,k-1)+error(5,k)*time_params(1);
-            int(6,k) = int(6,k-1)+error(6,k)*time_params(1);
-            int(7,k) = int(7,k-1)+error(7,k)*time_params(1);
-            int(8,k) = int(8,k-1)+error(8,k)*time_params(1);
-            int(9,k) = int(9,k-1)+error(9,k)*time_params(1);
-            int(10,k) = int(10,k-1)+error(10,k)*time_params(1);
-            int(11,k) = int(11,k-1)+error(11,k)*time_params(1);
-            ui(1,k) = pid_gains(5)*error(5,k)+pid_gains(8)*error(6,k);
-            ui(2,k) = -pid_gains(5)*error(5,k)+pid_gains(8)*error(6,k);
-            ui(3,k) = -pid_gains(5)*error(5,k)+pid_gains(8)*error(6,k);
-            ui(4,k) = pid_gains(5)*error(5,k)+pid_gains(8)*error(6,k);
+            int = increment_integrator(int,k,error,time_params);
+            ui(1,k) = pid_gains(5)*int(5,k)+pid_gains(8)*int(6,k);
+            ui(2,k) = -pid_gains(5)*int(5,k)+pid_gains(8)*int(6,k);
+            ui(3,k) = -pid_gains(5)*int(5,k)+pid_gains(8)*int(6,k);
+            ui(4,k) = pid_gains(5)*int(5,k)+pid_gains(8)*int(6,k);
         end
         % Derivative gain
         if k > 1
@@ -421,17 +362,7 @@ function [u,up,ui,ud,error,int] = calculate_gains(k,time_params,pid_gains,u,up,u
         up(4,k) = pid_gains(1)*error(4,k)*(sin(error(5,k))+cos(error(5,k)));
         % Integral gain
         if k > 1
-            int(1,k) = int(1,k-1)+error(1,k)*time_params(1);
-            int(2,k) = int(2,k-1)+error(2,k)*time_params(1);
-            int(3,k) = int(3,k-1)+error(3,k)*time_params(1);
-            int(4,k) = int(4,k-1)+error(4,k)*time_params(1);
-            int(5,k) = int(5,k-1)+error(5,k)*time_params(1);
-            int(6,k) = int(6,k-1)+error(6,k)*time_params(1);
-            int(7,k) = int(7,k-1)+error(7,k)*time_params(1);
-            int(8,k) = int(8,k-1)+error(8,k)*time_params(1);
-            int(9,k) = int(9,k-1)+error(9,k)*time_params(1);
-            int(10,k) = int(10,k-1)+error(10,k)*time_params(1);
-            int(11,k) = int(11,k-1)+error(11,k)*time_params(1);
+            int = increment_integrator(int,k,error,time_params);
             ui(1,k) = pid_gains(2)*int(4,k)*(-sin(int(5,k))+cos(int(5,k)));                                  % correct path heading to within achieved heading
             ui(2,k) = pid_gains(2)*int(4,k)*(sin(int(5,k))+cos(int(5,k)));
             ui(3,k) = pid_gains(2)*int(4,k)*(-sin(int(5,k))+cos(int(5,k)));
@@ -451,22 +382,13 @@ function [u,up,ui,ud,error,int] = calculate_gains(k,time_params,pid_gains,u,up,u
         up(2,k) = -pid_gains(4)*error(5,k)+pid_gains(7)*error(9,k);
         up(3,k) = -pid_gains(4)*error(5,k)+pid_gains(7)*error(9,k);
         up(4,k) = pid_gains(4)*error(5,k)+pid_gains(7)*error(9,k);
+        % Integral gain
         if k > 1
-            int(1,k) = int(1,k-1)+error(1,k)*time_params(1);
-            int(2,k) = int(2,k-1)+error(2,k)*time_params(1);
-            int(3,k) = int(3,k-1)+error(3,k)*time_params(1);
-            int(4,k) = int(4,k-1)+error(4,k)*time_params(1);
-            int(5,k) = int(5,k-1)+error(5,k)*time_params(1);
-            int(6,k) = int(6,k-1)+error(6,k)*time_params(1);
-            int(7,k) = int(7,k-1)+error(7,k)*time_params(1);
-            int(8,k) = int(8,k-1)+error(8,k)*time_params(1);
-            int(9,k) = int(9,k-1)+error(9,k)*time_params(1);
-            int(10,k) = int(10,k-1)+error(10,k)*time_params(1);
-            int(11,k) = int(11,k-1)+error(11,k)*time_params(1);
-            ui(1,k) = pid_gains(5)*error(5,k)+pid_gains(8)*error(9,k);
-            ui(2,k) = -pid_gains(5)*error(5,k)+pid_gains(8)*error(9,k);
-            ui(3,k) = -pid_gains(5)*error(5,k)+pid_gains(8)*error(9,k);
-            ui(4,k) = pid_gains(5)*error(5,k)+pid_gains(8)*error(9,k);
+            int = increment_integrator(int,k,error,time_params);
+            ui(1,k) = pid_gains(5)*int(5,k)+pid_gains(8)*int(9,k);
+            ui(2,k) = -pid_gains(5)*int(5,k)+pid_gains(8)*int(9,k);
+            ui(3,k) = -pid_gains(5)*int(5,k)+pid_gains(8)*int(9,k);
+            ui(4,k) = pid_gains(5)*int(5,k)+pid_gains(8)*int(9,k);
         end
         % Derivative gain
         if k > 1
@@ -482,22 +404,13 @@ function [u,up,ui,ud,error,int] = calculate_gains(k,time_params,pid_gains,u,up,u
         up(2,k) = -pid_gains(4)*error(5,k)+25;
         up(3,k) = -pid_gains(4)*error(5,k)+25;
         up(4,k) = pid_gains(4)*error(5,k)+25;
+        % Integral gain
         if k > 1
-            int(1,k) = int(1,k-1)+error(1,k)*time_params(1);
-            int(2,k) = int(2,k-1)+error(2,k)*time_params(1);
-            int(3,k) = int(3,k-1)+error(3,k)*time_params(1);
-            int(4,k) = int(4,k-1)+error(4,k)*time_params(1);
-            int(5,k) = int(5,k-1)+error(5,k)*time_params(1);
-            int(6,k) = int(6,k-1)+error(6,k)*time_params(1);
-            int(7,k) = int(7,k-1)+error(7,k)*time_params(1);
-            int(8,k) = int(8,k-1)+error(8,k)*time_params(1);
-            int(9,k) = int(9,k-1)+error(9,k)*time_params(1);
-            int(10,k) = int(10,k-1)+error(10,k)*time_params(1);
-            int(11,k) = int(11,k-1)+error(11,k)*time_params(1);
-            ui(1,k) = pid_gains(5)*error(5,k);
-            ui(2,k) = -pid_gains(5)*error(5,k);
-            ui(3,k) = -pid_gains(5)*error(5,k);
-            ui(4,k) = pid_gains(5)*error(5,k);
+            int = increment_integrator(int,k,error,time_params);
+            ui(1,k) = pid_gains(5)*int(5,k);
+            ui(2,k) = -pid_gains(5)*int(5,k);
+            ui(3,k) = -pid_gains(5)*int(5,k);
+            ui(4,k) = pid_gains(5)*int(5,k);
         end
         % Derivative gain
         if k > 1
@@ -507,38 +420,28 @@ function [u,up,ui,ud,error,int] = calculate_gains(k,time_params,pid_gains,u,up,u
             ud(4,k) = pid_gains(6)*((error(5,k)-error(5,k-1))/time_params(1))+pid_gains(9)*((error(9,k)-error(9,k-1))/time_params(1));
         end
         limit_mode = 1;
-    else    % 10: control psi to path heading and control u to 1 m/s
+    else        % 10: control psi to path heading and control u to 1 m/s
         % Proportional gain
-        up(1,k) = pid_gains(4)*error(11,k)-pid_gains(7)*error(9,k);
-        up(2,k) = -pid_gains(4)*error(11,k)+pid_gains(7)*error(9,k);
-        up(3,k) = -pid_gains(4)*error(11,k)-pid_gains(7)*error(9,k);
-        up(4,k) = pid_gains(4)*error(11,k)+pid_gains(7)*error(9,k);
+        up(1,k) = pid_gains(4)*error(12,k)-pid_gains(7)*error(11,k);
+        up(2,k) = -pid_gains(4)*error(12,k)+pid_gains(7)*error(11,k);
+        up(3,k) = -pid_gains(4)*error(12,k)-pid_gains(7)*error(11,k);
+        up(4,k) = pid_gains(4)*error(12,k)+pid_gains(7)*error(11,k);
+        % Integral gain
         if k > 1
-            int(1,k) = int(1,k-1)+error(1,k)*time_params(1);
-            int(2,k) = int(2,k-1)+error(2,k)*time_params(1);
-            int(3,k) = int(3,k-1)+error(3,k)*time_params(1);
-            int(4,k) = int(4,k-1)+error(4,k)*time_params(1);
-            int(5,k) = int(5,k-1)+error(5,k)*time_params(1);
-            int(6,k) = int(6,k-1)+error(6,k)*time_params(1);
-            int(7,k) = int(7,k-1)+error(7,k)*time_params(1);
-            int(8,k) = int(8,k-1)+error(8,k)*time_params(1);
-            int(9,k) = int(9,k-1)+error(9,k)*time_params(1);
-            int(10,k) = int(10,k-1)+error(10,k)*time_params(1);
-            int(11,k) = int(11,k-1)+error(11,k)*time_params(1);
-            ui(1,k) = pid_gains(5)*error(11,k)-pid_gains(8)*error(9,k);
-            ui(2,k) = -pid_gains(5)*error(11,k)+pid_gains(8)*error(9,k);
-            ui(3,k) = -pid_gains(5)*error(11,k)-pid_gains(8)*error(9,k);
-            ui(4,k) = pid_gains(5)*error(11,k)+pid_gains(8)*error(9,k);
+            int = increment_integrator(int,k,error,time_params);
+            ui(1,k) = pid_gains(5)*int(12,k)-pid_gains(8)*int(11,k);
+            ui(2,k) = -pid_gains(5)*int(12,k)+pid_gains(8)*int(11,k);
+            ui(3,k) = -pid_gains(5)*int(12,k)-pid_gains(8)*int(11,k);
+            ui(4,k) = pid_gains(5)*int(12,k)+pid_gains(8)*int(11,k);
         end
         % Derivative gain
         if k > 1
-            ud(1,k) = pid_gains(6)*((error(11,k)-error(11,k-1))/time_params(1))-pid_gains(9)*((error(9,k)-error(9,k-1))/time_params(1));
-            ud(2,k) = -pid_gains(6)*((error(11,k)-error(11,k-1))/time_params(1))+pid_gains(9)*((error(9,k)-error(9,k-1))/time_params(1));
-            ud(3,k) = -pid_gains(6)*((error(11,k)-error(11,k-1))/time_params(1))-pid_gains(9)*((error(9,k)-error(9,k-1))/time_params(1));
-            ud(4,k) = pid_gains(6)*((error(11,k)-error(11,k-1))/time_params(1))+pid_gains(9)*((error(9,k)-error(9,k-1))/time_params(1));
+            ud(1,k) = pid_gains(6)*((error(12,k)-error(12,k-1))/time_params(1))-pid_gains(9)*((error(11,k)-error(11,k-1))/time_params(1));
+            ud(2,k) = -pid_gains(6)*((error(12,k)-error(12,k-1))/time_params(1))+pid_gains(9)*((error(11,k)-error(11,k-1))/time_params(1));
+            ud(3,k) = -pid_gains(6)*((error(12,k)-error(12,k-1))/time_params(1))-pid_gains(9)*((error(11,k)-error(11,k-1))/time_params(1));
+            ud(4,k) = pid_gains(6)*((error(12,k)-error(12,k-1))/time_params(1))+pid_gains(9)*((error(11,k)-error(11,k-1))/time_params(1));
         end
         limit_mode = 2;
-    
     end
     
     % Total gain vector
@@ -602,6 +505,23 @@ function u = limit_thrust(u,k,limit_mode)
             u(4,k) = lb2N(-55);
         end
     end
+end
+
+function int = increment_integrator(int,k,error,time_params)
+
+    int(1,k) = int(1,k-1)+error(1,k)*time_params(1);
+    int(2,k) = int(2,k-1)+error(2,k)*time_params(1);
+    int(3,k) = int(3,k-1)+error(3,k)*time_params(1);
+    int(4,k) = int(4,k-1)+error(4,k)*time_params(1);
+    int(5,k) = int(5,k-1)+error(5,k)*time_params(1);
+    int(6,k) = int(6,k-1)+error(6,k)*time_params(1);
+    int(7,k) = int(7,k-1)+error(7,k)*time_params(1);
+    int(8,k) = int(8,k-1)+error(8,k)*time_params(1);
+    int(9,k) = int(9,k-1)+error(9,k)*time_params(1);
+    int(10,k) = int(10,k-1)+error(10,k)*time_params(1);
+    int(11,k) = int(11,k-1)+error(11,k)*time_params(1);
+    int(12,k) = int(12,k-1)+error(12,k)*time_params(1);
+
 end
 
 function N = lb2N(lb)
@@ -747,13 +667,7 @@ function [x_est,y_est] = observer(k,time_params,y,x_est,y_est,u,lumped_params,ge
       subplot(n,1,k)
       plot(1:N, sV(k,:), '-', 1:N, xV(k,:), '--')
     end
-    
-    
-    
-    
-    
-    
-    
+        
 %     % State observer
 %     A = [0 0 0 cos(pos_meas(3)) -sin(pos_meas(3)) 0;...                     % continuous state (system) matrix
 %             0 0 0 sin(pos_meas(3)) cos(pos_meas(3)) 0;...
