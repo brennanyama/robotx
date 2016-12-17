@@ -61,7 +61,7 @@ void rosreset(const std_msgs::Int8& cmd_msg)
 
 void rosstop(const std_msgs::Int8& cmd_msg)
 {
-  armstop = cmd_msg.data;
+  stoparm = cmd_msg.data;
   
 }
 
@@ -230,9 +230,11 @@ void loop() {
       started = 0;
       while ( encoderPos > 100)
         {                       //desiredPos*3.19 converts angles into counts
-          if( armstop == 1)
+          if( stoparm == 1)
           {
             encoderPos = 0;
+            analogWrite(motor, 180);
+            
           }
           Serial.println("Ch A");                                         // see state of ch A
           Serial.println(A);
@@ -264,8 +266,8 @@ void loop() {
             Serial.println(encoderPos);
             Serial.println("-----------------------------");            //for neatness sake, seperate loops to easily identify changes
           }
-          lastpos = desangle;
         }
+      analogWrite(motor, 180);
     }
   }
 
