@@ -29,15 +29,15 @@ int A = digitalRead(encoderPinA);
 int B = digitalRead(encoderPinB);
 int istate;
 int laststate;             
-int LS;
+//int LS;
 double lastpos = 1;
 int desangle;
-int steps = 20;
-int waka = 0;
-int armend = 0;
+int stepf = 0;
+int steps = 0;
 int start = 0;
 int reset = 0;
-
+int started;
+int stoparm;
 
 Servo myservo;       
 Stepper myStepper(200, in1Pin, in2Pin, in3Pin, in4Pin);
@@ -52,9 +52,16 @@ Stepper myStepper(200, in1Pin, in2Pin, in3Pin, in4Pin);
 //double D;
 
 ros::NodeHandle nh;
+
 void rosreset(const std_msgs::Int8& cmd_msg)
 {
   reset = cmd_msg.data;
+  
+}
+
+void rosstop(const std_msgs::Int8& cmd_msg)
+{
+  armstop = cmd_msg.data;
   
 }
 
@@ -84,6 +91,9 @@ void doEncoderB()             //when doencoder is called, increase position
 {
   encoderPos++;
 }
+
+
+ros::Subscriber<std_msgs::Int8> stop_sub("armstop", rosstop);
 ros::Subscriber<std_msgs::Int8> reset_sub("armreset", rosreset);
 ros::Subscriber<std_msgs::Int8> start_sub("armstart", rosstart);
 ros::Subscriber<std_msgs::Int8> angle_sub("armangle", rosangle);
@@ -119,106 +129,147 @@ void setup() {
 }
 
 void loop() {
-  if(start == 1 && armend != 1)
+  if(start == 1 )
   {
-  analogWrite(motor, 170);
-    //Serial.println("Type In 2 Numbers for Target");
-    //while (Serial.available() == 0);
-     //desangle = Serial.parseInt();
-     //steps = Serial.parseInt();
+    started = 1;
+    encoderPos = 0;
 
-    //Serial.print("numbers are ");
-    //Serial.print(xfinish); Serial.print("cm");
-    //Serial.print(yfinish); Serial.print("cm");
-    
-//    double xdelta = (xfinish-xstart);                    
-//    double ydelta = (yfinish-ystart);
     myservo.write (150);
-    delay(100);
-    while ((desangle != lastpos)) {
-      nh.spinOnce();
-  delay(1);
 
-    LS = digitalRead(limitswitch);
-    if (LS == LOW){
-      Serial.println("ktk");
-//      Serial.println(theta2);
-      Serial.println(lastpos);
-      Serial.println(desangle);
+      nh.spinOnce();
+      delay(1);
+    analogWrite(motor, 220); 
+
+//    LS = digitalRead(limitswitch);
+//    if (LS == LOW){
+//      Serial.println("ktk");
+//      Serial.println(lastpos);
+//      Serial.println(desangle);
       
-      delay(100);
-    }
-    if (LS == HIGH){ 
-      analogWrite(motor, 180);
-      encoderPos = 0;
-      Serial.println ("LS Pressed");
-      delay(100);
-    }
+//      delay(100);
+//    }
+//    if (LS == HIGH){ 
+//      analogWrite(motor, 180);
+//      encoderPos = 0;
+//      Serial.println ("LS Pressed");
+//      delay(100);
+//    }
     
-  if (encoderPos == 0){
-  while (((desangle/.1536)*3.15) > encoderPos){                       //desiredPos*3.19 converts angles into counts
-  Serial.println("Ch A");                                         // see state of ch A
-  Serial.println(A);
-  Serial.println("Ch B");                                         // see state of ch B       
-  Serial.println(B);  
-  Serial.println("Encoder Pos");  
-  Serial.println(encoderPos);  
+      if (encoderPos == 0)
+      {
+        while (((desangle/.1536)*3.15) > encoderPos)
+        {                       //desiredPos*3.19 converts angles into counts
+          
+          Serial.println("Ch A");                                         // see state of ch A
+          Serial.println(A);
+          Serial.println("Ch B");                                         // see state of ch B       
+          Serial.println(B);  
+          Serial.println("Encoder Pos");  
+          Serial.println(encoderPos);  
 //  Serial.println("theta2");  
 //  Serial.println(theta2);  
-  Serial.println("lastpos");
-  Serial.println(lastpos);                                          
-  analogWrite(motor, 200);                                      //moves arm down
-  laststate = digitalRead(encoderPinA);
+          Serial.println("lastpos");
+          Serial.println(lastpos);                                          
+          analogWrite(motor, 200);                                      //moves arm down
+          laststate = digitalRead(encoderPinA);
 
-    if (istate != laststate){                                     //if the motor is moving, it will try to change encoderposition accordingly
+          if (istate != laststate)
+          {                                     //if the motor is moving, it will try to change encoderposition accordingly
 
-    if (A != B){
-      Serial.println("clockwise");
-      encoderPos++;
-    }
-    if (B > A){ 
-      Serial.println("counterclockwise");
-      encoderPos++;
-    }
+            if (A != B)
+            {
+              Serial.println("clockwise");
+              encoderPos++;
+            }
+            if (B > A)
+            { 
+              Serial.println("counterclockwise");
+              encoderPos++;
+            }
     
-    Serial.println(encoderPos);
-          Serial.println("-----------------------------");            //for neatness sake, seperate loops to easily identify changes
-  }
-lastpos = desangle;
-}
-delay(10);
-analogWrite(motor, 180);
+            Serial.println(encoderPos);
+            Serial.println("-----------------------------");            //for neatness sake, seperate loops to easily identify changes
+          }
+          lastpos = desangle;
+        }
+      delay(10);
+      analogWrite(motor, 180);
 
-
-    Serial.println("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA");
-    myStepper.step((-steps*454.545455));
-    delay (2000);
-
-    myservo.write (150);          // sets the servo at 0 degree position
-    delay(2000);                // waits for the servo to get there
-    myservo.write (90);         // sets the servo at 90 degree position
-    delay (4000);               // waits for the servo to get there
-    myservo.write (150);
-    delay (1500);
+      nh.spinOnce();
+      delay(1);
+      
+      Serial.println("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA");
+      myStepper.step((-steps*454.545455));
+      delay (2000);
+      stepf = steps;
+      myservo.write (150);          // sets the servo at 0 degree position
+      delay(2000);                // waits for the servo to get there
+      myservo.write (90);         // sets the servo at 90 degree position
+      delay (4000);               // waits for the servo to get there
+      myservo.write (150);
+      delay (1500);
 //    myStepper.step(steps*454.545455);
 //    delay (2000);
 
-    encoderPos = 1;
       
 
       
      }
     }
 
-  armend=1;
-  }
-  while(reset != 1)
+
+  
+  while (reset != 1 && started == 1)
   {
   nh.spinOnce();
   delay(1);
+    if( reset == 1)
+    {
+      myStepper.step((stepf*454.545455));
+      delay (2000);
+      started = 0;
+      while ( encoderPos > 100)
+        {                       //desiredPos*3.19 converts angles into counts
+          if( armstop == 1)
+          {
+            encoderPos = 0;
+          }
+          Serial.println("Ch A");                                         // see state of ch A
+          Serial.println(A);
+          Serial.println("Ch B");                                         // see state of ch B       
+          Serial.println(B);  
+          Serial.println("Encoder Pos");  
+          Serial.println(encoderPos);  
+//  Serial.println("theta2");  
+//  Serial.println(theta2);  
+          Serial.println("lastpos");
+          Serial.println(lastpos);                                          
+          analogWrite(motor, 130);                                      //moves arm down
+          laststate = digitalRead(encoderPinA);
+
+          if (istate != laststate)
+          {                                     //if the motor is moving, it will try to change encoderposition accordingly
+
+            if (A != B)
+            {
+              Serial.println("clockwise");
+              encoderPos--;
+            }
+            if (A > B)
+            { 
+              Serial.println("counterclockwise");
+              encoderPos--;
+            }
+    
+            Serial.println(encoderPos);
+            Serial.println("-----------------------------");            //for neatness sake, seperate loops to easily identify changes
+          }
+          lastpos = desangle;
+        }
+    }
   }
-    myStepper.step((steps*454.545455));
-    delay (2000);
-    lastpos = 0;
-  
+
+    nh.spinOnce();
+    delay(1);
+        
 }
